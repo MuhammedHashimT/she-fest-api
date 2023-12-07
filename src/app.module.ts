@@ -56,7 +56,7 @@ import { ZoneModule } from './zone/zone.module';
         database: configService.get<string>('DB_NAME'),
         entities: ['dist/**/entities/*.entity{.ts,.js}'],
         autoLoadEntities: true,
-        // synchronize: true,
+        synchronize: true,
         ssl: { "rejectUnauthorized": true },
         // migrationsTableName: 'migrations',
         // migrations: ['dist/src/database/migrations/*.js'],

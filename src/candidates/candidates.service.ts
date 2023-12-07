@@ -35,10 +35,8 @@ export class CandidatesService {
     // the final data variable
     var FinalData: Candidate[] = [];
     var allData: {
-      adno: number;
       category: Category;
       chestNO: string;
-      class: string;
       name: string;
       team: Team;
     }[] = [];
@@ -100,10 +98,8 @@ export class CandidatesService {
       }
 
       allData.push({
-        adno: createCandidateInput.adno,
         category: category_id,
         chestNO: createCandidateInput.chestNO,
-        class: createCandidateInput.class,
         name: createCandidateInput.name,
         team: team_id,
       });

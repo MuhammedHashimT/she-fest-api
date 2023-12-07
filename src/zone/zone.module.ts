@@ -10,6 +10,7 @@ import { Zone } from './entities/zone.entity';
       Zone,
     ]),
   ],
-  providers: [ZoneResolver, ZoneService]
+  providers: [ZoneResolver, ZoneService],
+  exports: [ZoneService],
 })
 export class ZoneModule {}

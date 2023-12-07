@@ -8,6 +8,10 @@ export class CreateTeamInput {
   name:string;
 
   @IsNotEmpty()
+  @Field(()=>Int)
+  zoneId: number;
+
+  @IsNotEmpty()
   @Field()
   shortName: string;
 

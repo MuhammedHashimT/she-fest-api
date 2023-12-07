@@ -5,17 +5,36 @@ import { CreateTeamInput } from './dto/create-team.input';
 import { UpdateTeamInput } from './dto/update-team.input';
 import { Team } from './entities/team.entity';
 import { fieldsIdChecker, fieldsValidator } from 'src/utils/util';
+import { ZoneService } from 'src/zone/zone.service';
 
 @Injectable()
 export class TeamsService {
   constructor(
     @InjectRepository(Team) private teamRepository: Repository<Team>,
-    
+    private zoneService: ZoneService,
   ) {}
 
-  create(createTeamInput: CreateTeamInput) {
+async  create(createTeamInput: CreateTeamInput) {
+
+    const { name, shortName, description, color, zoneId } = createTeamInput;
+
+      const zone = await this.zoneService.findOne(zoneId);
+
+      if (!zone) {
+        throw new HttpException(
+          `cant find zone with id ${zoneId}`,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
     try {
-      const newTeamInput = this.teamRepository.create(createTeamInput);
+      const newTeamInput = this.teamRepository.create({
+        name,
+        shortName,
+        description,
+        color,
+        zone,
+      });
       return this.teamRepository.save(newTeamInput);
     } catch (e) {
       throw new HttpException(
@@ -32,6 +51,7 @@ export class TeamsService {
       'candidates.candidateProgrammes',
       'candidates.category',
       'candidates.candidateProgrammes.programme',
+      'zone'
     ];
 
     // any field that contains . as relation and not in the list will removed from the list
@@ -42,6 +62,7 @@ export class TeamsService {
     try {
       const queryBuilder = this.teamRepository
         .createQueryBuilder('team')
+        .leftJoinAndSelect('team.zone', 'zone')
         .leftJoinAndSelect('team.candidates', 'candidates')
         .leftJoinAndSelect('candidates.candidateProgrammes', 'candidateProgrammes')
         .leftJoinAndSelect('candidates.category', 'category')

@@ -10,7 +10,7 @@ export class CreateCandidateProgrammeInput {
 
   @IsNotEmpty()
   @Field()
-  @IsFourCharactersWithNumbers({message:"chest number must be 4 characters and last 3 characters must be numbers"})
+  // @IsFourCharactersWithNumbers({message:"chest number must be 4 characters and last 3 characters must be numbers"})
   chestNo: string;
 
   @Field(()=>[String] , {nullable:true})

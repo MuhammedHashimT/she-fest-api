@@ -6,9 +6,10 @@ import { Team } from './entities/team.entity';
 import { CredentialsModule } from 'src/credentials/credentials.module';
 import { CandidateProgrammeModule } from 'src/candidate-programme/candidate-programme.module';
 import { CategoryModule } from 'src/category/category.module';
+import { ZoneModule } from 'src/zone/zone.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Team]), forwardRef(() => CredentialsModule) ],
+  imports: [TypeOrmModule.forFeature([Team]), forwardRef(() => CredentialsModule) , ZoneModule ],
   providers: [TeamsResolver, TeamsService],
   exports: [TeamsService],
 })

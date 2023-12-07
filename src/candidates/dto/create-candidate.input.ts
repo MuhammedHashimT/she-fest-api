@@ -8,13 +8,8 @@ export class CreateCandidateInput {
   @Field()
   name: string;
 
-  @Field({ nullable: true })
-  class: string;
 
-  @Field(() => Int,{ nullable: true })
-  adno: number;
-
-  @IsFourCharactersWithNumbers({message:"chest number must be 4 characters and last 3 characters must be numbers"})
+  // @IsFourCharactersWithNumbers({message:"chest number must be 4 characters and last 3 characters must be numbers"})
   @Field({ nullable: true })
   chestNO : string;
 

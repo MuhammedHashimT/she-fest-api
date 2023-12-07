@@ -8,12 +8,12 @@ import { IsFourCharactersWithNumbers } from '../../utils/Validator'
 export class AddResult {
   @Field()
   @IsNotEmpty()
-  @IsFourCharactersWithNumbers({message:"chest number must be 4 characters and last 3 characters must be numbers"})
+  // @IsFourCharactersWithNumbers({message:"chest number must be 4 characters and last 3 characters must be numbers"})
   chestNo: string
 
   @Field(() => Float , {nullable:true})
   @IsNotEmpty()
   @Min(0)
   @Max(10)
-  mark: number
+  mark : number
 }
