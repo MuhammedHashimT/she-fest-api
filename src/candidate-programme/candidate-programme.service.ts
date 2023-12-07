@@ -7,7 +7,7 @@ import { CandidateProgramme } from './entities/candidate-programme.entity';
 import { CandidatesService } from 'src/candidates/candidates.service';
 import { ProgrammesService } from 'src/programmes/programmes.service';
 import { Category } from 'src/category/entities/category.entity';
-import { Mode, Model, Programme } from 'src/programmes/entities/programme.entity';
+import { Mode,  Programme } from 'src/programmes/entities/programme.entity';
 import { Candidate } from 'src/candidates/entities/candidate.entity';
 import { CategorySettings } from 'src/category-settings/entities/category-setting.entity';
 import { Type } from 'src/programmes/dto/create-programme.input';
@@ -379,7 +379,6 @@ export class CandidateProgrammeService {
       'candidate.category',
       'programme.category',
       'candidatesOfGroup',
-      'programme.skill',
     ];
 
     // validating fields
@@ -392,12 +391,11 @@ export class CandidateProgrammeService {
         .leftJoinAndSelect('candidateProgramme.programme', 'programme')
         .leftJoinAndSelect('candidateProgramme.candidate', 'candidate')
         .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup')
-        .leftJoinAndSelect('candidateProgramme.grade', 'grade')
+        .leftJoinAndSelect('CandidateProgramme.zonalgrade', 'grade')
         .leftJoinAndSelect('candidateProgramme.position', 'position')
         .leftJoinAndSelect('candidate.team', 'team')
         .leftJoinAndSelect('candidate.category', 'category')
         .leftJoinAndSelect('programme.category', 'programmeCategory')
-        .leftJoinAndSelect('programme.skill', 'skill');
 
       queryBuilder.select(
         fields.map(column => {
@@ -447,7 +445,6 @@ export class CandidateProgrammeService {
       .leftJoinAndSelect('candidate.category', 'category')
       .leftJoinAndSelect('candidate.team', 'team')
       .leftJoinAndSelect('programme.category', 'programmeCategory')
-      .leftJoinAndSelect('programme.skill', 'skill')
       .leftJoinAndSelect('category.settings', 'settings')
       .leftJoinAndSelect('candidate.candidateProgrammes', 'cp');
 
@@ -690,7 +687,6 @@ export class CandidateProgrammeService {
       .leftJoinAndSelect('candidate.category', 'category')
       .leftJoinAndSelect('candidate.team', 'team')
       .leftJoinAndSelect('programme.category', 'programmeCategory')
-      .leftJoinAndSelect('programme.skill', 'skill')
       .leftJoinAndSelect('category.settings', 'settings')
       .leftJoinAndSelect('candidate.candidateProgrammes', 'cp');
 
@@ -781,7 +777,7 @@ export class CandidateProgrammeService {
     const settings: CategorySettings = category.settings;
 
     // checking is it covered maximum programme limit
-    if (programme.type !== Type.HOUSE && programme.model !== Model.Sports) {
+    if (programme.type !== Type.HOUSE) {
       if (settings.maxProgram && (programme.type == Type.SINGLE || programme.type == Type.GROUP)) {
         const programmes: CandidateProgramme[] = candidate.candidateProgrammes;
 
@@ -798,7 +794,7 @@ export class CandidateProgrammeService {
       if (settings.maxSingle && programme.type == Type.SINGLE) {
         const SinglePrograms: CandidateProgramme[] = candidate.candidateProgrammes.filter(
           (e: CandidateProgramme) => {
-            return e.programme.type == Type.SINGLE && e.programme.model !== Model.Sports;
+            return e.programme.type == Type.SINGLE 
           },
         );
         if (SinglePrograms.length >= settings.maxSingle) {
@@ -814,7 +810,7 @@ export class CandidateProgrammeService {
       if (settings.maxGroup && programme.type == Type.GROUP) {
         const groupPrograms: CandidateProgramme[] = candidate.candidateProgrammes.filter(
           (e: CandidateProgramme) => {
-            return e.programme.type == Type.GROUP && e.programme.model !== Model.Sports;
+            return e.programme.type == Type.GROUP 
           },
         );
         if (groupPrograms.length >= settings.maxGroup) {
@@ -830,7 +826,7 @@ export class CandidateProgrammeService {
       if (settings.maxStage && programme.mode == Mode.STAGE && programme.type == Type.SINGLE) {
         const stagePrograms: CandidateProgramme[] = candidate.candidateProgrammes.filter(
           (e: CandidateProgramme) => {
-            return e.programme.mode == Mode.STAGE && e.programme.type == Type.SINGLE && e.programme.model !== Model.Sports;
+            return e.programme.mode == Mode.STAGE && e.programme.type == Type.SINGLE 
           },
         );
         if (stagePrograms.length >= settings.maxStage) {
@@ -850,7 +846,7 @@ export class CandidateProgrammeService {
       ) {
         const nonStagePrograms: CandidateProgramme[] = candidate.candidateProgrammes.filter(
           (e: CandidateProgramme) => {
-            return e.programme.mode == Mode.NON_STAGE && e.programme.type == Type.SINGLE && e.programme.model !== Model.Sports;
+            return e.programme.mode == Mode.NON_STAGE && e.programme.type == Type.SINGLE 
           },
         );
         if (nonStagePrograms.length >= settings.maxNonStage) {
@@ -870,60 +866,12 @@ export class CandidateProgrammeService {
       ) {
         const outDoorPrograms: CandidateProgramme[] = candidate.candidateProgrammes.filter(
           (e: CandidateProgramme) => {
-            return e.programme.mode == Mode.OUTDOOR_STAGE && e.programme.type == Type.SINGLE && e.programme.model !== Model.Sports;;
+            return e.programme.mode == Mode.OUTDOOR_STAGE && e.programme.type == Type.SINGLE 
           },
         );
         if (outDoorPrograms.length >= settings.maxOutDoor) {
           throw new HttpException(
             'The candidate has covered maximum outdoor stage programme count',
-            HttpStatus.BAD_REQUEST,
-          );
-        }
-      }
-    } else if (programme.type !== Type.HOUSE && programme.model == Model.Sports) {
-      // maximum sports programme
-      if (settings.maxSports && (programme.type == Type.SINGLE || programme.type == Type.GROUP)) {
-        const programmes: CandidateProgramme[] = candidate.candidateProgrammes.filter(
-          (e: CandidateProgramme) => {
-            return e.programme.model == Model.Sports;
-          },
-        );
-
-        if (programmes.length >= settings.maxSports) {
-          throw new HttpException(
-            'The candidate has covered maximum sports programme count',
-            HttpStatus.BAD_REQUEST,
-          );
-        }
-      }
-
-      // maximum sports single programme
-
-      if (settings.maxSportsSingle && programme.type == Type.SINGLE) {
-        const SinglePrograms: CandidateProgramme[] = candidate.candidateProgrammes.filter(
-          (e: CandidateProgramme) => {
-            return e.programme.type == Type.SINGLE && e.programme.model == Model.Sports;
-          },
-        );
-        if (SinglePrograms.length >= settings.maxSportsSingle) {
-          throw new HttpException(
-            'The candidate has covered maximum sports single programme count',
-            HttpStatus.BAD_REQUEST,
-          );
-        }
-      }
-
-      // maximum sports group programme
-
-      if (settings.maxSportsGroup && programme.type == Type.GROUP) {
-        const groupPrograms: CandidateProgramme[] = candidate.candidateProgrammes.filter(
-          (e: CandidateProgramme) => {
-            return e.programme.type == Type.GROUP && e.programme.model == Model.Sports;;
-          },
-        );
-        if (groupPrograms.length >= settings.maxSportsGroup) {
-          throw new HttpException(
-            'The candidate has covered maximum sports group programme count',
             HttpStatus.BAD_REQUEST,
           );
         }
@@ -940,7 +888,6 @@ export class CandidateProgrammeService {
       .leftJoinAndSelect('candidate.category', 'category')
       .leftJoinAndSelect('candidate.team', 'team')
       .leftJoinAndSelect('programme.category', 'programmeCategory')
-      .leftJoinAndSelect('programme.skill', 'skill')
       .leftJoinAndSelect('category.settings', 'settings')
       .leftJoinAndSelect('candidate.candidateProgrammes', 'cp');
 
@@ -1023,7 +970,7 @@ export class CandidateProgrammeService {
     }
 
     // checking is it covered maximum programme limit
-    if (programme.type !== Type.HOUSE && programme.model !== Model.Sports) {
+    if (programme.type !== Type.HOUSE ) {
       if (settings.maxProgram && (programme.type == Type.SINGLE || programme.type == Type.GROUP)) {
         const programmes: CandidateProgramme[] = candidate.candidateProgrammes;
 
@@ -1104,7 +1051,7 @@ export class CandidateProgrammeService {
           return false;
         }
       }
-    } else if (programme.type !== Type.HOUSE && programme.model == Model.Sports) {
+    } else if (programme.type !== Type.HOUSE) {
       // maximum sports programme
       if (settings.maxSports && (programme.type == Type.SINGLE || programme.type == Type.GROUP)) {
         const programmes: CandidateProgramme[] = candidate.candidateProgrammes;
@@ -1260,7 +1207,6 @@ export class CandidateProgrammeService {
       .leftJoinAndSelect('candidate.category', 'category')
       .leftJoinAndSelect('candidate.team', 'team')
       .leftJoinAndSelect('programme.category', 'programmeCategory')
-      .leftJoinAndSelect('programme.skill', 'skill')
       .leftJoinAndSelect('category.settings', 'settings')
       .leftJoinAndSelect('candidate.candidateProgrammes', 'cp');
 

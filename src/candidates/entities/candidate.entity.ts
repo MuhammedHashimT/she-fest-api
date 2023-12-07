@@ -6,23 +6,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  JoinTable,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Substitute } from 'src/substitute/entities/substitute.entity';
 
-export enum Gender {
-  MALE = 'M',
-  FEMALE = 'F',
-  OTHER = 'O',
-}
 
-registerEnumType(Gender, {
-  name: 'Gender',
-});
 
 @Entity()
 @ObjectType()
@@ -39,29 +29,11 @@ export class Candidate {
   @Field({ nullable: true })
   name: string;
 
-  @Column({ nullable: true })
-  @Field( { nullable: true })
-  class: string;
-
-  @Column({ nullable: true })
-  @Field(() => Int,{ nullable: true })
-  adno: number;
-
-  @Column({ nullable: true })
-  @Field({ nullable: true })
-  dob: string;
 
   @Column({ nullable: true, unique: true })
   @Field({ nullable: true })
   chestNO: string;
 
-  @Column({ nullable: true })
-  @Field({ nullable: true })
-  imageId: string;
-
-  @Column({ type: 'varchar', default: Gender.MALE })
-  @Field(() => Gender, { nullable: true })
-  gender: Gender;
 
   @Column({ nullable: true })
   @Field({ nullable: true })
@@ -71,29 +43,11 @@ export class Candidate {
   @Field({ nullable: true })
   groupPoint: number;
 
-  @Column({ nullable: true })
-  @Field({ nullable: true })
-  individualSportsPoint: number;
-
-  @Column({ nullable: true })
-  @Field({ nullable: true })
-  groupSportsPoint: number;
-
   // OneTOMany relations
 
   @OneToMany(() => CandidateProgramme, candidateProgramme => candidateProgramme.candidate)
   @Field(() => [CandidateProgramme], { nullable: true })
   candidateProgrammes: CandidateProgramme[];
-
-  @OneToMany(() => Substitute, substitute => substitute.oldCandidate)
-  @JoinTable()
-  @Field(() => [Substitute], { nullable: true })
-  substitutesOld: Substitute[];
-
-  @OneToMany(() => Substitute, substitute => substitute.newCandidate)
-  @JoinTable()
-  @Field(() => [Substitute], { nullable: true })
-  substitutesNew: Substitute[];
 
   // ManyToOne relations
 
@@ -113,5 +67,5 @@ export class Candidate {
 
   @UpdateDateColumn()
   @Field(() => Date, { nullable: true })
-  updatedAt: Date;
+  updatedAt: Date;  
 }

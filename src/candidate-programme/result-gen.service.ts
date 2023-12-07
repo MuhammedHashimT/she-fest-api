@@ -9,13 +9,11 @@ import { PositionService } from 'src/position/position.service';
 import { Position } from 'src/position/entities/position.entity';
 import { CandidateProgrammeService } from './candidate-programme.service';
 import { ProgrammesService } from 'src/programmes/programmes.service';
-import { Model, Programme, Type } from 'src/programmes/entities/programme.entity';
+import {  Programme, Type } from 'src/programmes/entities/programme.entity';
 import { DetailsService } from 'src/details/details.service';
 import { arrayInput } from './dto/array-input.dto';
 import { TeamsService } from 'src/teams/teams.service';
 import { CandidatesService } from 'src/candidates/candidates.service';
-import * as firebase from 'firebase/app';
-import * as firebasedb from 'firebase/database';
 import { AddManual } from './dto/add-manual.dto';
 
 @Injectable()
@@ -32,22 +30,7 @@ export class ResultGenService {
     private readonly candidateService: CandidatesService,
   ) { }
 
-  private firebaseConfig = {
-    apiKey: process.env.FIREBASE_API_KEY,
-    authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-    projectId: process.env.FIREBASE_PROJECT_ID,
-    storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
-    appId: process.env.FIREBASE_APP_ID,
-    measurementId: process.env.FIREBASE_MEASUREMENT_ID,
-  }; //by adding your credentials, you get authorized to read and write from the database
 
-  private app = firebase.initializeApp(this.firebaseConfig);
-  /**
-   * Loading Firebase Database and referring
-   * to user_data Object from the Database
-   */
-  private db = firebasedb.getDatabase(this.app);
 
   // upload Normal Result
 
@@ -97,28 +80,21 @@ export class ResultGenService {
 
     for (let index = 0; index < candidatesOfProgramme.length; index++) {
       const candidate = candidatesOfProgramme[index];
-      candidate.grade = null;
+      candidate.zonalgrade= null;
     }
 
     //  Generating Grade for each candidate
-    if (programme.model === Model.Arts) {
       for (let index = 0; index < candidatesOfProgramme.length; index++) {
         const candidate = candidatesOfProgramme[index];
         const grade: Grade = await this.generateGrade(candidate.mark, programme);
-        candidate.grade = grade;
+        candidate.zonalgrade= grade;
       }
-    } else {
-      for (let index = 0; index < candidatesOfProgramme.length; index++) {
-        const candidate = candidatesOfProgramme[index];
-        candidate.grade = null;
-      }
-    }
     // Generating Position for each candidate
 
     // Clear the position first before generating new one
     for (let index = 0; index < candidatesOfProgramme.length; index++) {
       const candidate = candidatesOfProgramme[index];
-      candidate.position = null;
+      candidate.zonalposition= null;
     }
 
     candidatesOfProgramme = await this.generatePosition(
@@ -326,7 +302,7 @@ export class ResultGenService {
       const position: Position = Positions[changed[index] - 1];
 
       if (position) {
-        candidateProgramme.position = position;
+        candidateProgramme.zonalposition= position;
       }
     }
 
@@ -337,7 +313,7 @@ export class ResultGenService {
     console.log(CandidateProgramme);
 
     // giving the point of grade
-    const grade: Grade = CandidateProgramme.grade;
+    const grade: Grade = CandidateProgramme.zonalgrade;
 
     CandidateProgramme.point = 0;
 
@@ -356,7 +332,7 @@ export class ResultGenService {
     }
 
     // giving the point of position
-    const position: Position = CandidateProgramme.position;
+    const position: Position = CandidateProgramme.zonalposition;
 
     if (position) {
       if (CandidateProgramme.programme.type == Type.SINGLE) {
@@ -566,13 +542,12 @@ export class ResultGenService {
           Gpoint,
           Ipoint,
           Hpoint,
-          candidateProgramme.programme.model,
         );
       }
 
       // set the point to candidate
 
-      await this.candidateService.addPoint(candidateProgramme.candidate.id, ICpoint, GCpoint, candidateProgramme.programme.model);
+      await this.candidateService.addPoint(candidateProgramme.candidate.id, ICpoint, GCpoint);
     }
 
     // set the result published to true
@@ -593,110 +568,6 @@ export class ResultGenService {
     return data;
   }
 
-  // live result using firebase
-  async liveResult(programCode: [string], timeInSec: number) {
-    // Array of programmes
-
-    const programmes: Programme[] = [];
-
-    // checking the programme exist
-
-    for (let index = 0; index < programCode.length; index++) {
-      const program = programCode[index];
-      const programme: Programme = await this.programmeService.findOneByCode(program);
-
-      if (!programme) {
-        throw new HttpException('Programme does not exist', HttpStatus.BAD_REQUEST);
-      }
-
-      // checking the programme is already published
-
-      if (programme.resultPublished) {
-        throw new HttpException(
-          `Programme ${program} is already published`,
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-
-      // checking the programme have any issue
-
-      if (programme.anyIssue) {
-        throw new HttpException(`Programme ${program} is having an issue`, HttpStatus.BAD_REQUEST);
-      }
-
-      // checking the the result is added to the programme
-
-      if (!programme.resultEntered) {
-        throw new HttpException(
-          `Programme ${program} is not having any result`,
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-
-      programmes.push(programme);
-    }
-
-    var datas = programmes;
-
-    let count = 0;
-
-    var dat = {
-      '/main': datas,
-    };
-    firebasedb.update(firebasedb.ref(this.db), dat);
-    var datList;
-    firebasedb
-      .get(firebasedb.child(firebasedb.ref(this.db), 'main'))
-      .then(snapshot => {
-        if (snapshot.exists()) {
-          datList = snapshot.val();
-        } else {
-          console.log('No data available');
-        }
-      })
-      .catch(error => {
-        throw new HttpException('Error on Live Result', HttpStatus.BAD_REQUEST);
-      });
-
-    var ref = firebasedb.ref(this.db, 'current');
-
-    const intervalId = setInterval(() => {
-      firebasedb
-        .get(ref)
-        .then(snapshot => {
-          if (snapshot.exists()) {
-            console.log(snapshot.val());
-          } else {
-            console.log('No data available');
-          }
-        })
-        .catch(error => {
-          throw new HttpException('Error on Live Result', HttpStatus.BAD_REQUEST);
-        });
-      datList[count]['startTime'] = new Date().getTime();
-      datList[count]['time'] = timeInSec;
-      var upo = {
-        '/current': datList[count],
-      };
-      firebasedb.update(firebasedb.ref(this.db), upo);
-
-      count++;
-
-     if (count === datList.length) {
-    console.log("stopped");
-    clearInterval(intervalId);
-    setTimeout(() => {
-      firebasedb.update(firebasedb.ref(this.db), {
-        "/current": "congratulations",
-      });
-    }, timeInSec * 1000);
-    setTimeout(() => {
-      firebasedb.update(firebasedb.ref(this.db), { "/current": "no data" });
-    }, 10000);
-  }
-    }, timeInSec * 1000);
-    return 0
-  }
 
   // upload result mannualy by controller
   async uploadResultManually(programCode: string, input: AddManual[]) {
@@ -758,12 +629,12 @@ export class ResultGenService {
       const candidateProgramme: CandidateProgramme = sortedCandidateProgramme[index];
 
       let mark = 0;
-      candidateProgramme.grade = null;
+      candidateProgramme.zonalgrade= null;
       if (input.grade) {
         const grade: Grade = await this.gradeService.findOneByName(input.grade, ['id', 'pointSingle', 'pointGroup', 'pointHouse', 'percentage']);
 
         if (grade) {
-          candidateProgramme.grade = grade;
+          candidateProgramme.zonalgrade= grade;
 
           // calculating the mark
           if (programme.type == Type.SINGLE) {
@@ -780,13 +651,13 @@ export class ResultGenService {
 
       }
 
-      candidateProgramme.position = null;
+      candidateProgramme.zonalposition= null;
 
       if (input.position) {
         const position: Position = await this.positionService.findOneByName(input.position, ['id', 'pointSingle', 'pointGroup', 'pointHouse', 'name']);
 
         if (position) {
-          candidateProgramme.position = position;
+          candidateProgramme.zonalposition= position;
 
           // calculating the mark
 

@@ -3,9 +3,6 @@ import { Expose } from 'class-transformer';
 import { CandidateProgramme } from 'src/candidate-programme/entities/candidate-programme.entity';
 import { Category } from 'src/category/entities/category.entity';
 import { CustomSetting } from 'src/custom-settings/entities/custom-setting.entity';
-import { Judge } from 'src/judge/entities/judge.entity';
-import { Skill } from 'src/skill/entities/skill.entity';
-import { Substitute } from 'src/substitute/entities/substitute.entity';
 import {
   Column,
   CreateDateColumn,
@@ -29,11 +26,6 @@ export enum Type {
   HOUSE = 'HOUSE',
 }
 
-export enum  Model {
-  Arts = 'Arts',
-  Sports = 'Sports',
-}
-
 registerEnumType(Mode, {
   name: 'Modes',
 });
@@ -42,9 +34,6 @@ registerEnumType(Type, {
   name: 'Types',
 });
 
-registerEnumType(Model, {
-  name: 'Models',
-});
 
 @ObjectType()
 @Entity()
@@ -73,9 +62,6 @@ export class Programme {
   @Field(() => Type, { nullable: true })
   type: Type;
 
-  @Column()
-  @Field(() => Model, { nullable: true })
-  model: Model;
 
   @Column({ nullable: true })
   @Field(() => Int, { nullable: true })
@@ -129,21 +115,6 @@ export class Programme {
   @Field(() => [CandidateProgramme], { nullable: true })
   candidateProgramme: CandidateProgramme[];
 
-  @OneToMany(() => Judge, judge => judge.programme, { nullable: true })
-  @Field(() => [Judge], { nullable: true })
-  @JoinTable()
-  judges: Judge[];
-
-  @OneToMany(() => Substitute, Substitute => Substitute.programme)
-  @JoinTable()
-  @Field(() => [Substitute], { nullable: true })
-  substitutes: Substitute[];
-
-  // ManyTOOne relations
-
-  @ManyToOne(() => Skill, skill => skill.programmes, { eager: true, onDelete: 'SET NULL' })
-  @Field(() => Skill, { nullable: true })
-  skill: Skill;
 
   @ManyToOne(() => Category, category => category.programmes, { eager: true, onDelete: 'SET NULL' })
   @Field(() => Category, { nullable: true })

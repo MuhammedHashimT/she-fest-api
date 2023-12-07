@@ -9,6 +9,4 @@ export class CreateCategoryInput {
   name: string;
 
 
-  @Field()
-  section : string;
 }

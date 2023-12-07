@@ -39,15 +39,7 @@ export class ResultGenResolver {
     return this.resultGenService.approveJudgeResult(programmeCode, judgeName);
   }
 
-  @Mutation(() => Int)
-  @HasRoles(Roles.Controller)
-  @UseGuards(RolesGuard)
-  async liveResult(
-    @Args('programmeCode' , { type: () => [String] }) programmeCode: [string],
-    @Args('timeInSec') timeInSec: number,
-  ) {
-    return this.resultGenService.liveResult(programmeCode, timeInSec);
-  }
+
 
   @Mutation(()=> [Programme])
   @HasRoles(Roles.Controller)

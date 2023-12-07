@@ -4,7 +4,6 @@ import { CategorySettings } from 'src/category-settings/entities/category-settin
 import { Credential } from 'src/credentials/entities/credential.entity';
 import { CustomSetting } from 'src/custom-settings/entities/custom-setting.entity';
 import { Programme } from 'src/programmes/entities/programme.entity';
-import { Section } from 'src/sections/entities/section.entity';
 import {
   Column,
   CreateDateColumn,
@@ -57,11 +56,6 @@ export class Category {
   @Field(() => [CustomSetting], { nullable: true })
   customSettings: CustomSetting[];
 
-  // ManyTOOne relations
-
-  @ManyToOne(() => Section, section => section.categories, { eager: true, onDelete: 'SET NULL' })
-  @Field(() => Section , { nullable: true })
-  section: Section;
 
   // ManyToMany relations
 

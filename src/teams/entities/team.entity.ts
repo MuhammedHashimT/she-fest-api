@@ -4,6 +4,7 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  ManyToOne,
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
@@ -12,6 +13,7 @@ import {
 import { Candidate } from 'src/candidates/entities/candidate.entity';
 import { Expose } from 'class-transformer';
 import { Credential } from 'src/credentials/entities/credential.entity';
+import { Zone } from 'src/zone/entities/zone.entity';
 
 @ObjectType()
 @Entity()
@@ -92,6 +94,13 @@ export class Team {
   @OneToMany(() => Candidate, candidate => candidate.team)
   @Field(() => [Candidate], { nullable: true })
   candidates: Candidate[];
+
+  // many to one relationship with zone
+
+  @ManyToOne(() => Zone, zone => zone.teams)
+  @JoinColumn()
+  @Field(() => Zone, { nullable: true })
+  zone: Zone;
 
   // Dates
 

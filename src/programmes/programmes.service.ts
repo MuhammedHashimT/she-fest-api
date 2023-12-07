@@ -3,14 +3,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { CreateProgrammeInput } from './dto/create-programme.input';
 import { UpdateProgrammeInput } from './dto/update-programme.input';
-import { Mode, Model, Programme, Type } from './entities/programme.entity';
+import { Mode, Programme, Type } from './entities/programme.entity';
 import { CategoryService } from 'src/category/category.service';
-import { SkillService } from 'src/skill/skill.service';
 import { CreateSchedule } from './dto/create-schedule.dto';
 import { Credential } from 'src/credentials/entities/credential.entity';
 import { DetailsService } from 'src/details/details.service';
 import { Category } from 'src/category/entities/category.entity';
-import { Skill } from 'src/skill/entities/skill.entity';
 import { CredentialsService } from '../credentials/credentials.service';
 import { createInput } from './dto/create-inputs.inputs';
 import { fieldsIdChecker, fieldsValidator, isDateValid } from 'src/utils/util';
@@ -19,11 +17,10 @@ import { fieldsIdChecker, fieldsValidator, isDateValid } from 'src/utils/util';
 export class ProgrammesService {
   constructor(
     @InjectRepository(Programme) private programmeRepository: Repository<Programme>,
-    private skillService: SkillService,
     private categoryService: CategoryService,
     private detailsService: DetailsService,
     private readonly CredentialService: CredentialsService,
-  ) {}
+  ) { }
 
   //  To create many Programmes at a time , usually using on Excel file upload
 
@@ -34,14 +31,12 @@ export class ProgrammesService {
       name: string;
       programmeCode: string;
       category: Category;
-      skill: Skill;
       mode: Mode;
       type: Type;
       duration: number;
       candidateCount: number;
       groupCount: number;
       conceptNote: string;
-      model : Model;
     }[] = [];
 
     // Iterate the values and taking all the individuals
@@ -64,29 +59,6 @@ export class ProgrammesService {
 
       this.CredentialService.checkPermissionOnCategories(user, category_id.name);
 
-      const IS_SKILL_REQUIRED = (await this.detailsService.findIt()).isSkillHave;
-
-      //  checking is skill exist
-
-      let skill_id = await this.skillService.findOneByName(createProgrammeInput.skill, ['id']);
-
-      if (IS_SKILL_REQUIRED) {
-        if (!createProgrammeInput.skill) {
-          throw new HttpException(
-            `Skill is required ,ie: check on Skill of ${createProgrammeInput.name}`,
-            HttpStatus.BAD_REQUEST,
-          );
-        }
-
-        if (!skill_id) {
-          throw new HttpException(
-            `Cant find a skill named ${createProgrammeInput.skill} ,ie: check on skill of ${createProgrammeInput.name}`,
-            HttpStatus.BAD_REQUEST,
-          );
-        }
-      } else {
-        skill_id = null;
-      }
 
       // checking is programmeCode already exist
       const Programme = await this.programmeRepository.findOne({
@@ -121,14 +93,12 @@ export class ProgrammesService {
         name: createProgrammeInput.name,
         programmeCode: createProgrammeInput.programCode,
         category: category_id,
-        skill: skill_id,
         mode: createProgrammeInput.mode,
         type: createProgrammeInput.type,
         duration: createProgrammeInput.duration,
         candidateCount: createProgrammeInput.candidateCount,
         groupCount: createProgrammeInput.groupCount,
         conceptNote: createProgrammeInput.conceptNote,
-        model : createProgrammeInput.model,
       });
     }
 
@@ -157,11 +127,9 @@ export class ProgrammesService {
         input.mode = data.mode;
         input.name = data.name;
         input.programCode = data.programmeCode;
-        input.skill = data.skill;
         input.type = data.type;
         input.groupCount = data.groupCount;
         input.conceptNote = data.conceptNote;
-        input.model = data.model;
 
         let saveData = await this.programmeRepository.save(input);
 
@@ -208,31 +176,7 @@ export class ProgrammesService {
 
     this.CredentialService.checkPermissionOnCategories(user, category_id.name);
 
-    //  checking is skill exist
 
-    const IS_SKILL_REQUIRED = (await this.detailsService.findIt()).isSkillHave;
-
-    //  checking is skill exist
-
-    let skill_id = await this.skillService.findOneByName(createProgrammeInput.skill, ['id']);
-
-    if (IS_SKILL_REQUIRED) {
-      if (!createProgrammeInput.skill) {
-        throw new HttpException(
-          `Skill is required ,ie: check on Skill of ${createProgrammeInput.name}`,
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-
-      if (!skill_id) {
-        throw new HttpException(
-          `Cant find a skill named ${createProgrammeInput.skill} ,ie: check on skill of ${createProgrammeInput.name}`,
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-    } else {
-      skill_id = null;
-    }
 
     try {
       // creating a instance of Programme
@@ -245,13 +189,11 @@ export class ProgrammesService {
       input.mode = createProgrammeInput.mode;
       input.name = createProgrammeInput.name;
       input.programCode = createProgrammeInput.programCode;
-      input.skill = skill_id;
       input.type = createProgrammeInput.type;
       input.venue = createProgrammeInput.venue || null;
       input.groupCount = createProgrammeInput.groupCount || null;
       input.conceptNote = createProgrammeInput.conceptNote;
-      input.model = createProgrammeInput.model;
-      
+
       return this.programmeRepository.save(input);
     } catch (e) {
       throw new HttpException(
@@ -264,13 +206,12 @@ export class ProgrammesService {
   async findAll(fields: string[]) {
     const allowedRelations = [
       'category',
-      'skill',
       'candidateProgramme',
       'candidateProgramme.candidate',
       'candidateProgramme.candidate.team',
       'category.settings',
       'candidateProgramme.candidatesOfGroup',
-      'candidateProgramme.grade',
+      'CandidateProgramme.zonalgrade',
       'candidateProgramme.position',
     ];
 
@@ -283,13 +224,12 @@ export class ProgrammesService {
       const queryBuilder = this.programmeRepository
         .createQueryBuilder('programme')
         .leftJoinAndSelect('programme.category', 'category')
-        .leftJoinAndSelect('programme.skill', 'skill')
         .leftJoinAndSelect('programme.candidateProgramme', 'candidateProgramme')
         .leftJoinAndSelect('candidateProgramme.candidate', 'candidate')
         .leftJoinAndSelect('candidate.team', 'team')
         .leftJoinAndSelect('category.settings', 'settings')
         .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup')
-        .leftJoinAndSelect('candidateProgramme.grade', 'grade')
+        .leftJoinAndSelect('CandidateProgramme.zonalgrade', 'grade')
         .leftJoinAndSelect('candidateProgramme.position', 'position')
         .orderBy('programme.id', 'ASC');
 
@@ -322,13 +262,12 @@ export class ProgrammesService {
   async findResultEnteredProgrammes(fields: string[]) {
     const allowedRelations = [
       'category',
-      'skill',
       'candidateProgramme',
       'candidateProgramme.candidate',
       'candidateProgramme.candidate.team',
       'category.settings',
       'candidateProgramme.candidatesOfGroup',
-      'candidateProgramme.grade',
+      'CandidateProgramme.zonalgrade',
       'candidateProgramme.position',
     ];
 
@@ -343,13 +282,12 @@ export class ProgrammesService {
         .createQueryBuilder('programme')
         .where('programme.resultEntered = true')
         .leftJoinAndSelect('programme.category', 'category')
-        .leftJoinAndSelect('programme.skill', 'skill')
         .leftJoinAndSelect('programme.candidateProgramme', 'candidateProgramme')
         .leftJoinAndSelect('candidateProgramme.candidate', 'candidate')
         .leftJoinAndSelect('candidate.team', 'team')
         .leftJoinAndSelect('category.settings', 'settings')
         .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup')
-        .leftJoinAndSelect('candidateProgramme.grade', 'grade')
+        .leftJoinAndSelect('CandidateProgramme.zonalgrade', 'grade')
         .leftJoinAndSelect('candidateProgramme.position', 'position');
 
       queryBuilder.select(
@@ -372,22 +310,21 @@ export class ProgrammesService {
         { cause: e },
       );
     }
-    
+
   }
 
   // result published programmes
 
 
-  async findResultPublishedProgrammes( fields: string[]){
+  async findResultPublishedProgrammes(fields: string[]) {
     const allowedRelations = [
       'category',
-      'skill',
       'candidateProgramme',
       'candidateProgramme.candidate',
       'candidateProgramme.candidate.team',
       'category.settings',
       'candidateProgramme.candidatesOfGroup',
-      'candidateProgramme.grade',
+      'CandidateProgramme.zonalgrade',
       'candidateProgramme.position',
     ];
 
@@ -402,13 +339,12 @@ export class ProgrammesService {
         .createQueryBuilder('programme')
         .where('programme.resultPublished = true')
         .leftJoinAndSelect('programme.category', 'category')
-        .leftJoinAndSelect('programme.skill', 'skill')
         .leftJoinAndSelect('programme.candidateProgramme', 'candidateProgramme')
         .leftJoinAndSelect('candidateProgramme.candidate', 'candidate')
         .leftJoinAndSelect('candidate.team', 'team')
         .leftJoinAndSelect('category.settings', 'settings')
         .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup')
-        .leftJoinAndSelect('candidateProgramme.grade', 'grade')
+        .leftJoinAndSelect('CandidateProgramme.zonalgrade', 'grade')
         .leftJoinAndSelect('candidateProgramme.position', 'position');
 
       queryBuilder.select(
@@ -437,13 +373,12 @@ export class ProgrammesService {
   async findOne(id: number, fields: string[]) {
     const allowedRelations = [
       'category',
-      'skill',
       'candidateProgramme',
       'candidateProgramme.candidate',
       'candidateProgramme.candidate.team',
       'category.settings',
       'candidateProgramme.candidatesOfGroup',
-      'candidateProgramme.grade',
+      'CandidateProgramme.zonalgrade',
       'candidateProgramme.position',
       'judges'
     ];
@@ -458,14 +393,13 @@ export class ProgrammesService {
         .createQueryBuilder('programme')
         .where('programme.id = :id', { id })
         .leftJoinAndSelect('programme.category', 'category')
-        .leftJoinAndSelect('programme.skill', 'skill')
         .leftJoinAndSelect('programme.judges', 'judges')
         .leftJoinAndSelect('programme.candidateProgramme', 'candidateProgramme')
         .leftJoinAndSelect('candidateProgramme.candidate', 'candidate')
         .leftJoinAndSelect('candidate.team', 'team')
         .leftJoinAndSelect('category.settings', 'settings')
         .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup')
-        .leftJoinAndSelect('candidateProgramme.grade', 'grade')
+        .leftJoinAndSelect('CandidateProgramme.zonalgrade', 'grade')
         .leftJoinAndSelect('candidateProgramme.position', 'position');
 
       queryBuilder.select(
@@ -498,13 +432,12 @@ export class ProgrammesService {
         },
         relations: [
           'category',
-          'skill',
           'candidateProgramme',
           'category.settings',
           'candidateProgramme.candidate',
           'candidateProgramme.candidate.team',
           'candidateProgramme.candidatesOfGroup',
-          'candidateProgramme.grade',
+          'CandidateProgramme.zonalgrade',
           'candidateProgramme.position',
         ],
       });
@@ -527,18 +460,17 @@ export class ProgrammesService {
         },
         relations: [
           'category',
-          'skill',
           'candidateProgramme',
           'category.settings',
           'candidateProgramme.candidate',
           'candidateProgramme.candidate.team',
           'candidateProgramme.candidatesOfGroup',
-          'candidateProgramme.grade',
+          'CandidateProgramme.zonalgrade',
           'candidateProgramme.position',
         ],
       });
 
-      if(!programme){
+      if (!programme) {
         return null;
       }
 
@@ -551,13 +483,13 @@ export class ProgrammesService {
   // find the programme by programme code know is the programme is there
 
   async findOneByCodeForCheck(programCode: string) {
-    
+
     try {
-    const data =  await this.programmeRepository.createQueryBuilder('programme')
-     .where('programme.programCode = :programCode', { programCode })
-     .select('programme.id')
-     .getOne();
-     
+      const data = await this.programmeRepository.createQueryBuilder('programme')
+        .where('programme.programCode = :programCode', { programCode })
+        .select('programme.id')
+        .getOne();
+
 
       return data;
     } catch (e) {
@@ -565,12 +497,11 @@ export class ProgrammesService {
     }
   }
 
- async findByCategories(categories: string[] , fields: string[]) {
+  async findByCategories(categories: string[], fields: string[]) {
     const allowedRelations = [
       'category',
-      'skill',
     ];
-    
+
     // validating fields
     fields = fieldsValidator(fields, allowedRelations);
     // checking if fields contains id
@@ -581,40 +512,39 @@ export class ProgrammesService {
         .createQueryBuilder('programme')
         .leftJoinAndSelect('programme.category', 'category')
         .where('category.name IN (:...categories)', { categories })
-        .leftJoinAndSelect('programme.skill', 'skill')
 
-        queryBuilder.select(
-          fields.map(column => {
-            const splitted = column.split('.');
-  
-            if (splitted.length > 1) {
-              return `${splitted[splitted.length - 2]}.${splitted[splitted.length - 1]}`;
-            } else {
-              return `programme.${column}`;
-            }
-          }),
-        );
-        const programme = await queryBuilder.getMany();
-        return programme;
-      } catch (e) {
-        throw new HttpException(
-          'An Error have when finding programme ',
-          HttpStatus.INTERNAL_SERVER_ERROR,
-          { cause: e },
-        );
-      }
+      queryBuilder.select(
+        fields.map(column => {
+          const splitted = column.split('.');
+
+          if (splitted.length > 1) {
+            return `${splitted[splitted.length - 2]}.${splitted[splitted.length - 1]}`;
+          } else {
+            return `programme.${column}`;
+          }
+        }),
+      );
+      const programme = await queryBuilder.getMany();
+      return programme;
+    } catch (e) {
+      throw new HttpException(
+        'An Error have when finding programme ',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        { cause: e },
+      );
+    }
   }
 
- 
+
   async update(id: number, updateProgrammeInput: UpdateProgrammeInput, user: Credential) {
 
-        // checking is programme exist
+    // checking is programme exist
 
-        const programme = await this.programmeRepository.findOneBy({ id });
+    const programme = await this.programmeRepository.findOneBy({ id });
 
-        if (!programme) {
-          throw new HttpException(`Cant find a programme to update`, HttpStatus.BAD_REQUEST);
-        }
+    if (!programme) {
+      throw new HttpException(`Cant find a programme to update`, HttpStatus.BAD_REQUEST);
+    }
 
     //  checking is category exist
 
@@ -632,32 +562,6 @@ export class ProgrammesService {
     this.CredentialService.checkPermissionOnCategories(user, category_id.name);
 
 
-    //  checking is skill exist
-
-    const IS_SKILL_REQUIRED = (await this.detailsService.findIt()).isSkillHave
-    
-
-    //  checking is skill exist
-
-    let skill_id = await this.skillService.findOneByName(updateProgrammeInput.skill, ['id']);
-
-    if (IS_SKILL_REQUIRED) {
-      if (!updateProgrammeInput.skill) {
-        throw new HttpException(
-          `Skill is required ,ie: check on Skill of ${updateProgrammeInput.name}`,
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-
-      if (!skill_id) {
-        throw new HttpException(
-          `Cant find a skill named ${updateProgrammeInput.skill} ,ie: check on skill of ${updateProgrammeInput.name}`,
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-    } else {
-      skill_id = null;
-    }
 
     try {
       // creating a instance of Programme
@@ -669,12 +573,10 @@ export class ProgrammesService {
       programme.mode = updateProgrammeInput.mode;
       programme.name = updateProgrammeInput.name;
       programme.programCode = updateProgrammeInput.programCode;
-      programme.skill = skill_id;
       programme.type = updateProgrammeInput.type;
       programme.venue = updateProgrammeInput.venue || null;
       programme.groupCount = updateProgrammeInput.groupCount;
       programme.conceptNote = updateProgrammeInput.conceptNote;
-      programme.model = updateProgrammeInput.model;
 
       return this.programmeRepository.save(programme)
     } catch {
@@ -686,7 +588,7 @@ export class ProgrammesService {
   }
 
   async remove(id: number, user: Credential) {
-    const programme = await this.findOne(id, ['id','category' , 'category.name']);
+    const programme = await this.findOne(id, ['id', 'category', 'category.name']);
 
     if (!programme) {
       throw new HttpException(`Cant find a programme to delete`, HttpStatus.BAD_REQUEST);
@@ -695,7 +597,7 @@ export class ProgrammesService {
     // authenticating the user have permission to remove the category
 
     console.log(programme);
-    
+
 
     this.CredentialService.checkPermissionOnCategories(user, programme.category.name);
 
@@ -718,10 +620,10 @@ export class ProgrammesService {
       programme: Programme;
     }[] = [];
 
-    const UploadedProgrammes : Programme[] = []
+    const UploadedProgrammes: Programme[] = []
 
     console.log(scheduleData);
-    
+
 
     for (let index = 0; index < scheduleData.inputs.length; index++) {
       const data: CreateSchedule = scheduleData.inputs[index];
@@ -764,14 +666,14 @@ export class ProgrammesService {
         }
       }
       allData.push({
-        code: code ,
-        date: date ,
+        code: code,
+        date: date,
         venue: venue,
         programme: programme
       })
     }
 
-    
+
 
     try {
       if (allData.length !== scheduleData.inputs.length) {
@@ -800,7 +702,7 @@ export class ProgrammesService {
       }
 
       return UploadedProgrammes;
-      
+
     } catch (e) {
       throw new HttpException(
         'An Error have when updating programme ',
@@ -965,7 +867,7 @@ export class ProgrammesService {
 
   async removePublishedResult(programCode: string) {
     // checking the code is correct
-    const programme: Programme = await this.findOneByCodeForCheck(programCode, );
+    const programme: Programme = await this.findOneByCodeForCheck(programCode,);
 
     if (!programme) {
       throw new HttpException(
@@ -1044,5 +946,4 @@ export class ProgrammesService {
     }
   }
 
-  // check Programme is ready to publish
 }

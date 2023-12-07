@@ -1,13 +1,11 @@
 import { HttpException, HttpStatus, Injectable, UsePipes, ValidationPipe } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CategoryService } from 'src/category/category.service';
-import { SectionsService } from 'src/sections/sections.service';
 import { TeamsService } from 'src/teams/teams.service';
 import { In, Repository } from 'typeorm';
 import { CreateCandidateInput } from './dto/create-candidate.input';
 import { UpdateCandidateInput } from './dto/update-candidate.input';
 import { Candidate } from './entities/candidate.entity';
-import { Gender } from './entities/candidate.entity';
 import { Category } from 'src/category/entities/category.entity';
 import { Credential } from 'src/credentials/entities/credential.entity';
 import { CandidateProgrammeService } from 'src/candidate-programme/candidate-programme.service';
@@ -15,11 +13,7 @@ import { Team } from 'src/teams/entities/team.entity';
 import { CreateInput } from './dto/create-input.dto';
 import { CredentialsService } from 'src/credentials/credentials.service';
 import { fieldsIdChecker, fieldsValidator } from 'src/utils/util';
-import { createReadStream } from 'fs';
-import { join } from 'path';
-import { Readable } from 'stream';
-import { driveConfig } from 'src/utils/googleApi.auth';
-import { Model, Type } from 'src/programmes/entities/programme.entity';
+import {  Type } from 'src/programmes/entities/programme.entity';
 import { CategorySettings } from 'src/category-settings/entities/category-setting.entity';
 import { CategorySettingsService } from 'src/category-settings/category-settings.service';
 // import { drive } from 'src/utils/googleApi.auth';
@@ -30,7 +24,6 @@ export class CandidatesService {
     @InjectRepository(Candidate) private candidateRepository: Repository<Candidate>,
     private teamService: TeamsService,
     private categoryService: CategoryService,
-    private sectionService: SectionsService,
     private candidateProgrammeService: CandidateProgrammeService,
     private credentialService: CredentialsService,
     private categorySettingsService: CategorySettingsService,
@@ -135,10 +128,8 @@ export class CandidatesService {
         const input = new Candidate();
 
         // updating Value to candidate
-        input.adno = data.adno;
         input.category = data.category;
         input.chestNO = data.chestNO;
-        input.class = data.class;
         input.name = data.name;
         input.team = data.team;
 
@@ -204,10 +195,8 @@ export class CandidatesService {
       const input = new Candidate();
 
       // updating Value to candidate
-      input.adno = createCandidateInput.adno;
       input.category = category_id;
       input.chestNO = createCandidateInput.chestNO;
-      input.class = createCandidateInput.class;
       input.name = createCandidateInput.name;
       input.team = team_id;
 
@@ -596,13 +585,10 @@ export class CandidatesService {
       let totalSports = 0;
       candidate.candidateProgrammes.forEach(candidateProgramme => {
 
-        if(candidateProgramme.programme?.model === Model.Arts && candidateProgramme.programme?.type === Type.SINGLE){
+        if(candidateProgramme.programme?.type === Type.SINGLE){
           total = total + candidateProgramme.point;
         }
 
-        if(candidateProgramme.programme?.model === Model.Sports && candidateProgramme.programme?.type === Type.SINGLE){
-          totalSports = totalSports + candidateProgramme.point;
-        }
 
       });
 
@@ -658,14 +644,9 @@ export class CandidatesService {
       let totalSports = 0;
       candidate.candidateProgrammes.forEach(candidateProgramme => {
 
-        if(candidateProgramme.programme?.model === Model.Arts && candidateProgramme.programme?.type === Type.SINGLE && candidateProgramme.programme?.resultPublished){
+        if(candidateProgramme.programme?.type === Type.SINGLE && candidateProgramme.programme?.resultPublished){
           total = total + candidateProgramme.point;
         }
-
-        if(candidateProgramme.programme?.model === Model.Sports && candidateProgramme.programme?.type === Type.SINGLE && candidateProgramme.programme?.resultPublished){
-          totalSports = totalSports + candidateProgramme.point;
-        }
-
       });
 
 
@@ -747,10 +728,8 @@ export class CandidatesService {
     try {
 
       // updating Value to candidate
-      candidate.adno = updateCandidateInput.adno;
       candidate.category = category_id;
       candidate.chestNO = updateCandidateInput.chestNO;
-      candidate.class = updateCandidateInput.class;
       candidate.name = updateCandidateInput.name;
       candidate.team = team_id;
 
@@ -803,7 +782,7 @@ export class CandidatesService {
 
   // add individual or group point to candidate
 
-  async addPoint(id: number, indPoint: number = 0, groupPoint: number = 0, model: Model) {
+  async addPoint(id: number, indPoint: number = 0, groupPoint: number = 0) {
     const candidate = await this.candidateRepository.findOneBy({ id });
 
     if (!candidate) {
@@ -812,102 +791,22 @@ export class CandidatesService {
 
     let individualPoint = candidate.individualPoint || 0;
     let groupGeneralPoint = candidate.groupPoint || 0;
-    let groupSportsPoint = candidate.individualSportsPoint || 0;
-    let individualSportsPoint = candidate.groupSportsPoint || 0;
 
-    if (model === Model.Arts) {
       individualPoint = individualPoint + indPoint;
       groupGeneralPoint = groupGeneralPoint + groupPoint;
-    } else if (model === Model.Sports) {
-      individualSportsPoint = individualSportsPoint + indPoint;
-      groupSportsPoint = groupSportsPoint + groupPoint;
-    }
+ 
 
     try {
       return this.candidateRepository.save({
         ...candidate,
         individualPoint,
         groupPoint: groupGeneralPoint,
-        individualSportsPoint,
-        groupSportsPoint,
       });
     } catch (err) {
       throw new HttpException(
         'An Error have when updating candidate point ',
         HttpStatus.INTERNAL_SERVER_ERROR,
         { cause: err },
-      );
-    }
-  }
-
-  // image upload to google drive and save id to candidate
-
-  async uploadFiles(files: Express.Multer.File[]) {
-
-    for (let index = 0; index < files.length; index++) {
-      const file = files[index];
-
-      const chestNo = file.originalname.split('.')[0]
-
-
-
-      await this.uploadFile(chestNo, file.buffer, file.originalname, file.mimetype);
-
-
-      // await this.uploadFile(chestNo, file.buffer, file.originalname, file.mimetype);
-    }
-
-    return 'done';
-  }
-
-  async uploadFile(chestNo: string, filePath: Buffer, fileName: string, mimeType: string) {
-
-    const candidate = await this.candidateChecker(chestNo, mimeType)
-
-    // check the file is image
-    const buffer = Buffer.from(filePath);
-
-    // change the buffer to readable stream
-    const readableStream = new Readable({
-      read() {
-        this.push(buffer);
-        this.push(null);
-      },
-    });
-
-    // Get the file extension.
-    const fileExtension = fileName.split('.')[1];
-
-    // get the folder id
-    const folderId = process.env.DRIVE_CANDIDATES_FOLDER_ID;
-
-    try {
-      // driveConfig
-      const drive = driveConfig();
-
-      const response = await drive.files.create({
-        requestBody: {
-          name: `${chestNo}.${fileExtension}`, //file name
-          mimeType,
-          parents: folderId ? [folderId] : [],
-        },
-        media: {
-          mimeType,
-          body: readableStream,
-        },
-      });
-      // report the response from the request
-
-      // save image id to candidate
-
-      candidate.imageId = response.data.id;
-
-      return this.candidateRepository.save(candidate);
-    } catch (error) {
-      //report the error message
-      throw new HttpException(
-        `Error on google drive upload , check the image of ${chestNo}`,
-        HttpStatus.BAD_REQUEST,
       );
     }
   }

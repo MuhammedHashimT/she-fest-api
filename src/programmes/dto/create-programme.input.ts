@@ -1,6 +1,5 @@
 import { InputType, Int, Field, registerEnumType, ObjectType } from '@nestjs/graphql';
 import { IsNotEmpty, IsNumber } from 'class-validator';
-import { Model } from '../entities/programme.entity';
 
 export enum Mode {
   STAGE = 'STAGE',
@@ -23,9 +22,6 @@ registerEnumType(Type, {
   name: 'Type',
 });
 
-registerEnumType(Model, {
-  name: 'Model',
-});
 
 @InputType()
 export class CreateProgrammeInput {
@@ -46,9 +42,6 @@ export class CreateProgrammeInput {
   @Field(()=> Type)
   type: Type;
 
-  @IsNotEmpty()
-  @Field(()=> Model) 
-  model: Model;
   
   @Field(()=> Int , {nullable:true})
   groupCount: number;
@@ -73,9 +66,7 @@ export class CreateProgrammeInput {
   @IsNotEmpty()
   @Field()
   conceptNote: string;
-                                             
-  @Field()
-  skill: string ;
+             
 
   @IsNotEmpty()
   @Field()

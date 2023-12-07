@@ -5,9 +5,6 @@ import { CreateTeamInput } from './dto/create-team.input';
 import { UpdateTeamInput } from './dto/update-team.input';
 import { Team } from './entities/team.entity';
 import { fieldsIdChecker, fieldsValidator } from 'src/utils/util';
-import { Model } from 'src/programmes/entities/programme.entity';
-import { CandidateProgrammeService } from 'src/candidate-programme/candidate-programme.service';
-import { CategoryService } from 'src/category/category.service';
 
 @Injectable()
 export class TeamsService {
@@ -256,7 +253,6 @@ export class TeamsService {
     gPoint: number = 0,
     iPoint: number = 0,
     hPoint: number = 0,
-    programModel: Model,
   ) {
     const team: Team = await this.teamRepository.findOneBy({ id });
     if (!team) {
@@ -269,23 +265,13 @@ export class TeamsService {
     let HousePoint: number =team.HousePoint || 0;
     let GroupPoint: number = team.GroupPoint || 0;
     let IndividualPoint: number = team.IndividualPoint || 0;
-    let totalSportsPoint: number = team.totalSportsPoint || 0;
-    let HouseSportsPoint: number = team.HouseSportsPoint  || 0;
-    let GroupSportsPoint: number = team.GroupSportsPoint || 0;
-    let IndividualSportsPoint: number = team.IndividualSportsPoint || 0;
 
     // checking if the programme is arts or sports
-    if (programModel === Model.Arts) {
       totalPoint = totalPoint + tPoint;
       HousePoint = HousePoint + hPoint;
       GroupPoint = GroupPoint + gPoint;
       IndividualPoint = IndividualPoint + iPoint;
-    } else if (programModel === Model.Sports) {
-      totalSportsPoint = totalSportsPoint + tPoint;
-      HouseSportsPoint = HouseSportsPoint + hPoint;
-      GroupSportsPoint = GroupSportsPoint + gPoint;
-      IndividualSportsPoint = IndividualSportsPoint + iPoint;
-    }
+
     try {
       // saving the team
       return this.teamRepository.save({
@@ -293,11 +279,7 @@ export class TeamsService {
         totalPoint,
         HousePoint,
         GroupPoint,
-        IndividualPoint,
-        totalSportsPoint,
-        HouseSportsPoint,
-        GroupSportsPoint,
-        IndividualSportsPoint,
+        IndividualPoint
       });
     } catch (e) {
       throw new HttpException(

@@ -1,5 +1,4 @@
 import { ObjectType, Field, Int, Float } from '@nestjs/graphql';
-import { Expose } from 'class-transformer';
 import { Candidate } from 'src/candidates/entities/candidate.entity';
 import { Grade } from 'src/grades/entities/grade.entity';
 import { Position } from 'src/position/entities/position.entity';
@@ -42,46 +41,30 @@ export class CandidateProgramme {
   @Column({ nullable: true , type:'float'})
   mark: number;
 
-  @Field(() => Float, { nullable: true })
-  @Column({ nullable: true , type:'float'})
-  judge1: number;
-
-  @Field(() => Float, { nullable: true })
-  @Column({ nullable: true , type:'float' })
-  judge2: number;
-
-  @Field(() => Float, { nullable: true })
-  @Column({ nullable: true , type:'float'})
-  judge3: number;
-
-  @Field(() => Float, { nullable: true })
-  @Column({ nullable: true , type:'float'})
-  judge4: number;
-
-  @Field(() => Float, { nullable: true })
-  @Column({ nullable: true , type:'float'})
-  judge5: number;
-
-  @Field(() => Float, { nullable: true })
-  @Column({ nullable: true , type:'float'})
-  judge6: number;
-
-  @Field(() => Float, { nullable: true })
-  @Column({ nullable: true , type:'float'})
-  judge7: number;
-
   // ManyToOne relations
 
   @Field(() => Position, { nullable: true })
-  @ManyToOne(() => Position, position => position.candidateProgramme, {
+  @ManyToOne(() => Position, position => position.zonalcandidateProgramme, {
     eager: true,
     onDelete: 'SET NULL',
   })
-  position: Position;
+  zonalposition: Position;
 
   @Field(() => Grade, { nullable: true })
-  @ManyToOne(() => Grade, grade => grade.candidateProgramme, { eager: true, onDelete: 'SET NULL' })
-  grade: Grade;
+  @ManyToOne(() => Grade, grade => grade.zonalcandidateProgramme, { eager: true, onDelete: 'SET NULL' })
+  zonalgrade: Grade;
+
+  @Field(() => Position, { nullable: true })
+  @ManyToOne(() => Position, position => position.finalcandidateProgramme, {
+    eager: true,
+    onDelete: 'SET NULL',
+  })
+  finalposition: Position;
+
+  @Field(() => Grade, { nullable: true })
+  @ManyToOne(() => Grade, grade => grade.finalcandidateProgramme, { eager: true, onDelete: 'SET NULL' })
+  finalgrade: Grade;
+
 
   @Field(() => Programme , { nullable: true })
   @ManyToOne(() => Programme, programme => programme.candidateProgramme, {

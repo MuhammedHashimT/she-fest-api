@@ -4,34 +4,20 @@ import { In, Repository } from 'typeorm';
 import { CreateCategoryInput } from './dto/create-category.input';
 import { UpdateCategoryInput } from './dto/update-category.input';
 import { Category } from './entities/category.entity';
-import { SectionsService } from 'src/sections/sections.service';
 import { fieldsIdChecker, fieldsValidator } from '../utils/util';
 import { Stream } from 'stream';
-import { google } from 'googleapis';
 
 @Injectable()
 export class CategoryService {
   constructor(
     @InjectRepository(Category) private categoryRepository: Repository<Category>,
-    private readonly sectionService: SectionsService,
   ) {}
 
   async create(createCategoryInput: CreateCategoryInput) {
-    //  checking is section exist
-
-    const section = await this.sectionService.findOneByName(createCategoryInput.section , ['id']);
-    
-    if (!section) {
-      throw new HttpException(
-        `Cant find a section named ${createCategoryInput.section}  ,ie: check on Section of ${createCategoryInput.name}`,
-        HttpStatus.BAD_REQUEST,
-      );
-    }
 
     try {
       const newCategoryInput = this.categoryRepository.create({
         name: createCategoryInput.name,
-        section,
       });
       return this.categoryRepository.save(newCategoryInput);
     } catch (e) {
@@ -45,7 +31,6 @@ export class CategoryService {
 
  async findAll( fields: string[]) {
     const allowedRelations = [
-      'section',
       'candidates',
       'settings',
       'candidates.team',
@@ -58,7 +43,6 @@ export class CategoryService {
 
     try {
       const queryBuilder = this.categoryRepository.createQueryBuilder('category')
-        .leftJoinAndSelect('category.section', 'section')
         .leftJoinAndSelect('category.candidates', 'candidates')
         .leftJoinAndSelect('category.settings', 'settings')
         .leftJoinAndSelect('candidates.team', 'team');
@@ -88,7 +72,6 @@ export class CategoryService {
 
  async findOne(id: number , fields: string[]) {
   const allowedRelations = [
-    'section',
     'candidates',
     'programmes',
     'settings',
@@ -102,7 +85,6 @@ export class CategoryService {
   
     const queryBuilder = this.categoryRepository.createQueryBuilder('category')
       .where('category.id = :id', { id })
-        .leftJoinAndSelect('category.section', 'section')
         .leftJoinAndSelect('category.candidates', 'candidates')
         .leftJoinAndSelect('category.programmes', 'programmes')
         .leftJoinAndSelect('category.settings', 'settings')
@@ -142,7 +124,7 @@ export class CategoryService {
         where: {
           name,
         },
-        relations: ['section' , 'programmes', 'settings'],
+        relations: [ 'programmes', 'settings'],
       });
       if (!category) {
         throw new HttpException(`can't find category with id ${name}`, HttpStatus.BAD_REQUEST);
@@ -160,12 +142,11 @@ export class CategoryService {
 
   async findManyByName(names: string[] , fields: string[] , team : string ='') {
     const allowedRelations = [
-      'section',
       'candidates',
       'programmes',
       'programmes.candidateProgramme',
       'programmes.candidateProgramme.candidate',
-      'programmes.candidateProgramme.grade',
+      'programmes.CandidateProgramme.zonalgrade',
       'programmes.candidateProgramme.position',
       'settings',
       'candidates.team',
@@ -178,12 +159,11 @@ export class CategoryService {
 
     const queryBuilder = this.categoryRepository.createQueryBuilder('category')
       .where('category.name IN (:...names)', { names })
-      .leftJoinAndSelect('category.section', 'section')
       .leftJoinAndSelect('category.candidates', 'candidates')
       .leftJoinAndSelect('category.programmes', 'programmes')
       .leftJoinAndSelect('programmes.candidateProgramme', 'candidateProgramme')
       .leftJoinAndSelect('candidateProgramme.candidate', 'candidate')
-      .leftJoinAndSelect('candidateProgramme.grade', 'grade')
+      .leftJoinAndSelect('CandidateProgramme.zonalgrade', 'grade')
       .leftJoinAndSelect('candidateProgramme.position', 'position')
       .leftJoinAndSelect('category.settings', 'settings')
       .leftJoinAndSelect('candidates.team', 'team');
@@ -244,22 +224,11 @@ export class CategoryService {
 
     const category = await this.findOne(id , ['id'])
 
-    //  checking is section exist
-
-    const section = await this.sectionService.findOneByName(updateCategoryInput.section , ['id']);
-
-    if (!section) {
-      throw new HttpException(
-        `Cant find a section named ${updateCategoryInput.section}  ,ie: check on Section of ${updateCategoryInput.name}`,
-        HttpStatus.BAD_REQUEST,
-      );
-    }
 
     try {
       Object.assign(category,{
         id,
         name: updateCategoryInput.name,
-        section,
       })
       return this.categoryRepository.save(category);
     } catch (e) {

@@ -43,8 +43,12 @@ export class Grade {
   // OneTOMany relations
 
   @Field(() => [CandidateProgramme], { nullable: true })
-  @OneToMany(() => CandidateProgramme, candidateProgramme => candidateProgramme.grade)
-  candidateProgramme: CandidateProgramme[];
+  @OneToMany(() => CandidateProgramme, candidateProgramme => candidateProgramme.zonalgrade)
+  zonalcandidateProgramme: CandidateProgramme[];
+
+  @Field(() => [CandidateProgramme], { nullable: true })
+  @OneToMany(() => CandidateProgramme, candidateProgramme => candidateProgramme.zonalgrade)
+  finalcandidateProgramme: CandidateProgramme[];
 
   // Dates
 

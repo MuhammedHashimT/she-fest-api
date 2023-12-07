@@ -42,8 +42,12 @@ export class Position {
   // OneToMany relations
 
   @Field(() => [CandidateProgramme], { nullable: true })
-  @OneToMany(() => CandidateProgramme, candidateProgramme => candidateProgramme.position)
-  candidateProgramme: CandidateProgramme[];
+  @OneToMany(() => CandidateProgramme, candidateProgramme => candidateProgramme.zonalposition)
+  zonalcandidateProgramme: CandidateProgramme[];
+
+  @Field(() => [CandidateProgramme], { nullable: true })
+  @OneToMany(() => CandidateProgramme, candidateProgramme => candidateProgramme.zonalposition)
+  finalcandidateProgramme: CandidateProgramme[];
   
   // Dates
 
