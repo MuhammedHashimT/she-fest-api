@@ -229,8 +229,8 @@ export class ProgrammesService {
         .leftJoinAndSelect('candidate.team', 'team')
         .leftJoinAndSelect('category.settings', 'settings')
         .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup')
-        .leftJoinAndSelect('CandidateProgramme.zonalgrade', 'grade')
-        .leftJoinAndSelect('candidateProgramme.position', 'position')
+          // .leftJoinAndSelect('CandidateProgramme.zonalgrade', 'grade')
+          // .leftJoinAndSelect('candidateProgramme.position', 'position')
         .orderBy('programme.id', 'ASC');
 
       queryBuilder.select(
