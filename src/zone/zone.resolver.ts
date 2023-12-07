@@ -13,7 +13,7 @@ export class ZoneResolver {
     return this.zoneService.create(createZoneInput);
   }
 
-  @Query(() => [Zone], { name: 'zone' })
+  @Query(() => [Zone], { name: 'zones' })
   findAll() {
     return this.zoneService.findAll();
   }
