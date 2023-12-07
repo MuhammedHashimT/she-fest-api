@@ -350,8 +350,8 @@ export class CandidatesService {
         .leftJoinAndSelect('candidate.team', 'team')
         .leftJoinAndSelect('candidate.candidateProgrammes', 'candidateProgrammes')
         .leftJoinAndSelect('candidateProgrammes.programme', 'programme')
-        .leftJoinAndSelect('candidateProgrammes.position', 'position')
-        .leftJoinAndSelect('candidateProgrammes.grade', 'grade');
+        // .leftJoinAndSelect('candidateProgrammes.position', 'position')
+        // .leftJoinAndSelect('candidateProgrammes.grade', 'grade');
 
       queryBuilder.select(
         fields.map(column => {

@@ -211,8 +211,8 @@ export class ProgrammesService {
       'candidateProgramme.candidate.team',
       'category.settings',
       'candidateProgramme.candidatesOfGroup',
-      'CandidateProgramme.zonalgrade',
-      'candidateProgramme.position',
+      // 'CandidateProgramme.zonalgrade',
+      // 'candidateProgramme.position',
     ];
 
     // validating fields
@@ -267,8 +267,8 @@ export class ProgrammesService {
       'candidateProgramme.candidate.team',
       'category.settings',
       'candidateProgramme.candidatesOfGroup',
-      'CandidateProgramme.zonalgrade',
-      'candidateProgramme.position',
+      // 'CandidateProgramme.zonalgrade',
+      // 'candidateProgramme.position',
     ];
 
     // validating fields
@@ -287,8 +287,8 @@ export class ProgrammesService {
         .leftJoinAndSelect('candidate.team', 'team')
         .leftJoinAndSelect('category.settings', 'settings')
         .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup')
-        .leftJoinAndSelect('CandidateProgramme.zonalgrade', 'grade')
-        .leftJoinAndSelect('candidateProgramme.position', 'position');
+        // .leftJoinAndSelect('CandidateProgramme.zonalgrade', 'grade')
+        // .leftJoinAndSelect('candidateProgramme.position', 'position');
 
       queryBuilder.select(
         fields.map(column => {
@@ -324,8 +324,8 @@ export class ProgrammesService {
       'candidateProgramme.candidate.team',
       'category.settings',
       'candidateProgramme.candidatesOfGroup',
-      'CandidateProgramme.zonalgrade',
-      'candidateProgramme.position',
+      // 'CandidateProgramme.zonalgrade',
+      // 'candidateProgramme.position',
     ];
 
     // validating fields
@@ -344,8 +344,8 @@ export class ProgrammesService {
         .leftJoinAndSelect('candidate.team', 'team')
         .leftJoinAndSelect('category.settings', 'settings')
         .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup')
-        .leftJoinAndSelect('CandidateProgramme.zonalgrade', 'grade')
-        .leftJoinAndSelect('candidateProgramme.position', 'position');
+        // .leftJoinAndSelect('CandidateProgramme.zonalgrade', 'grade')
+        // .leftJoinAndSelect('candidateProgramme.position', 'position');
 
       queryBuilder.select(
         fields.map(column => {
@@ -378,9 +378,8 @@ export class ProgrammesService {
       'candidateProgramme.candidate.team',
       'category.settings',
       'candidateProgramme.candidatesOfGroup',
-      'CandidateProgramme.zonalgrade',
-      'candidateProgramme.position',
-      'judges'
+      // 'CandidateProgramme.zonalgrade',
+      // 'candidateProgramme.position',
     ];
 
     // validating fields
@@ -393,14 +392,13 @@ export class ProgrammesService {
         .createQueryBuilder('programme')
         .where('programme.id = :id', { id })
         .leftJoinAndSelect('programme.category', 'category')
-        .leftJoinAndSelect('programme.judges', 'judges')
         .leftJoinAndSelect('programme.candidateProgramme', 'candidateProgramme')
         .leftJoinAndSelect('candidateProgramme.candidate', 'candidate')
         .leftJoinAndSelect('candidate.team', 'team')
         .leftJoinAndSelect('category.settings', 'settings')
         .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup')
-        .leftJoinAndSelect('CandidateProgramme.zonalgrade', 'grade')
-        .leftJoinAndSelect('candidateProgramme.position', 'position');
+        // .leftJoinAndSelect('CandidateProgramme.zonalgrade', 'grade')
+        // .leftJoinAndSelect('candidateProgramme.position', 'position');
 
       queryBuilder.select(
         fields.map(column => {
@@ -437,8 +435,8 @@ export class ProgrammesService {
           'candidateProgramme.candidate',
           'candidateProgramme.candidate.team',
           'candidateProgramme.candidatesOfGroup',
-          'CandidateProgramme.zonalgrade',
-          'candidateProgramme.position',
+          // 'CandidateProgramme.zonalgrade',
+          // 'candidateProgramme.position',
         ],
       });
 
@@ -465,8 +463,8 @@ export class ProgrammesService {
           'candidateProgramme.candidate',
           'candidateProgramme.candidate.team',
           'candidateProgramme.candidatesOfGroup',
-          'CandidateProgramme.zonalgrade',
-          'candidateProgramme.position',
+          // 'CandidateProgramme.zonalgrade',
+          // 'candidateProgramme.position',
         ],
       });
 
