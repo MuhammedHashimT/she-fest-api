@@ -16,7 +16,7 @@ export class GradesResolver {
     private readonly credentialsService: CredentialsService,) {}
 
   @UsePipes(AuthPipe)
-  @HasRoles(Roles.Admin)
+  @HasRoles(Roles.Admin , Roles.Controller)
   @UseGuards(RolesGuard)
   @Mutation(() => Grade)
   createGrade(@Args('createGradeInput') createGradeInput: CreateGradeInput) {
@@ -42,14 +42,14 @@ export class GradesResolver {
 
   
   @Mutation(() => Grade)
-  @HasRoles(Roles.Admin)
+  @HasRoles(Roles.Admin , Roles.Controller)
   @UseGuards(RolesGuard)
   updateGrade(@Args('updateGradeInput') updateGradeInput: UpdateGradeInput) {
     return this.gradesService.update(updateGradeInput.id, updateGradeInput);
   }
 
   @Mutation(() => Grade)
-  @HasRoles(Roles.Admin)
+  @HasRoles(Roles.Admin , Roles.Controller)
   @UseGuards(RolesGuard)
   removeGrade(@Args('id', { type: () => Int }) id: number) {
     return this.gradesService.remove(id);

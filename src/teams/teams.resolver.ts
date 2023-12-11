@@ -17,7 +17,7 @@ export class TeamsResolver {
 
   @UsePipes(AuthPipe)
   @Mutation(() => Team)
-  @HasRoles(Roles.Admin)
+  @HasRoles(Roles.Admin , Roles.Controller)
   @UseGuards(RolesGuard)
   createTeam(@Args('createTeamInput') createTeamInput: CreateTeamInput) {
     return this.teamsService.create(createTeamInput);
@@ -38,14 +38,14 @@ export class TeamsResolver {
   }
 
   @Mutation(() => Team)
-  @HasRoles(Roles.Admin)
+  @HasRoles(Roles.Admin , Roles.Controller)
   @UseGuards(RolesGuard)
   updateTeam(@Args('updateTeamInput') updateTeamInput: UpdateTeamInput) {
     return this.teamsService.update(updateTeamInput.id, updateTeamInput);
   }
 
   @Mutation(() => Team)
-  @HasRoles(Roles.Admin)
+  @HasRoles(Roles.Admin , Roles.Controller)
   @UseGuards(RolesGuard)
   removeTeam(@Args('id', { type: () => Int }) id: number) {
     return this.teamsService.remove(id);

@@ -17,7 +17,7 @@ export class DetailsResolver {
   ) {}
 
   @Mutation(() => Detail)
-  @HasRoles(Roles.Admin)
+  @HasRoles(Roles.Admin , Roles.Controller)
   @UseGuards(RolesGuard)
   createDetail(@Args('createDetailInput') createDetailInput: CreateDetailInput) {
     return this.detailsService.create(createDetailInput);
@@ -31,7 +31,7 @@ export class DetailsResolver {
   }
 
   @Mutation(() => Detail)
-  @HasRoles(Roles.Admin)
+  @HasRoles(Roles.Admin , Roles.Controller)
   @UseGuards(RolesGuard)
   updateDetail(@Args('updateDetailInput') updateDetailInput: UpdateDetailInput) {
     return this.detailsService.update(updateDetailInput.id, updateDetailInput);

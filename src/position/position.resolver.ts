@@ -16,7 +16,7 @@ export class PositionResolver {
     private readonly credentialsService: CredentialsService,) {}
 
   @UsePipes(AuthPipe)
-  @HasRoles(Roles.Admin)
+  @HasRoles(Roles.Admin , Roles.Controller)
   @UseGuards(RolesGuard)
   @Mutation(() => Position)
   createPosition(@Args('createPositionInput') createPositionInput: CreatePositionInput) {
@@ -40,7 +40,7 @@ export class PositionResolver {
     return this.positionService.findOne(id , fields);
   }
 
-  @HasRoles(Roles.Admin)
+  @HasRoles(Roles.Admin , Roles.Controller)
   @UseGuards(RolesGuard)
   @Mutation(() => Position)
   updatePosition(@Args('updatePositionInput') updatePositionInput: UpdatePositionInput) {
@@ -48,7 +48,7 @@ export class PositionResolver {
   }
 
   @Mutation(() => Position)
-  @HasRoles(Roles.Admin)
+  @HasRoles(Roles.Admin , Roles.Controller)
   @UseGuards(RolesGuard)
   removePosition(@Args('id', { type: () => Int }) id: number) {
     return this.positionService.remove(id);

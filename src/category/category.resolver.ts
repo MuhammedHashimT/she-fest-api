@@ -54,14 +54,14 @@ export class CategoryResolver {
 
   @UsePipes(CategoryPipe)
   @Mutation(() => Category)
-  @HasRoles(Roles.Admin)
+  @HasRoles(Roles.Admin , Roles.Controller)
   @UseGuards(RolesGuard)
   updateCategory(@Args('updateCategoryInput') updateCategoryInput: UpdateCategoryInput) {
     return this.categoryService.update(updateCategoryInput.id, updateCategoryInput);
   }
 
   @Mutation(() => Category)
-  @HasRoles(Roles.Admin)
+  @HasRoles(Roles.Admin , Roles.Controller)
   @UseGuards(RolesGuard)
   removeCategory(@Args('id', { type: () => Int }) id: number) {
     return this.categoryService.remove(id);
