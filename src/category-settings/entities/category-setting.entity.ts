@@ -13,80 +13,80 @@ export class CategorySettings {
   // MAX
 
   @Field(() => Int , {nullable : true})
-  @Column()
+  @Column({nullable : true})
   maxProgram: number;
  
   @Field(() => Int , {nullable : true})
-  @Column()
+  @Column({nullable : true})
   maxSingle: number;
   
   @Field(() => Int , {nullable : true})
-  @Column()
+  @Column({nullable : true})
   maxGroup : number;
 
   @Field(() => Int , {nullable : true})
-  @Column()
+  @Column({nullable : true})
   maxStage: number;
 
   @Field(() => Int , {nullable : true})
-  @Column()
+  @Column({nullable : true})
   maxNonStage: number;
 
   @Field(() => Int , {nullable : true})
-  @Column()
+  @Column({nullable : true})
   maxOutDoor: number;
 
   // ON SPORTS
 
   @Field(() => Int , {nullable : true})
-  @Column()
+  @Column({nullable : true})
   maxSports: number;
 
   @Field(() => Int , {nullable : true})
-  @Column()
+  @Column({nullable : true})
   maxSportsSingle: number;
 
   @Field(() => Int , {nullable : true})
-  @Column()
+  @Column({nullable : true})
   maxSportsGroup : number;
 
   // MIN
   @Field(() => Int , {nullable : true})
-  @Column()
+  @Column({nullable : true})
   minProgram: number;
 
   @Field(() => Int , {nullable : true})
-  @Column()
+  @Column({nullable : true})
   minSingle: number;
 
   @Field(() => Int , {nullable : true})
-  @Column()
+  @Column({nullable : true})
   minGroup : number;
   
   @Field(() => Int , {nullable : true})
-  @Column()
+  @Column({nullable : true})
   minStage: number;
 
   @Field(() => Int , {nullable : true})
-  @Column()
+  @Column({nullable : true})
   minNonStage: number;
 
   @Field(() => Int , {nullable : true})
-  @Column()
+  @Column({nullable : true})
   minOutDoor: number;
   
   // ON SPORTS
 
   @Field(() => Int , {nullable : true})
-  @Column()
+  @Column({nullable : true})
   minSports: number;
 
   @Field(() => Int , {nullable : true})
-  @Column()
+  @Column({nullable : true})
   minSportsSingle: number;
 
   @Field(() => Int , {nullable : true})
-  @Column()
+  @Column({nullable : true})
   minSportsGroup : number;
 
   @Field(() => Boolean , {defaultValue : false})

@@ -36,6 +36,10 @@ export class CategorySettingsService {
       minGroup: createCategorySettingInput.minGroup,
       minSingle: createCategorySettingInput.minSingle,
       minProgram: createCategorySettingInput.minProgram,
+      maxStage: createCategorySettingInput.maxStage,
+      minStage: createCategorySettingInput.minStage,
+      maxNonStage: createCategorySettingInput.maxNonStage,
+      minNonStage: createCategorySettingInput.minNonStage,
     });
 
     const savedSettings = await this.categorySettingsRepository.save(newData);
