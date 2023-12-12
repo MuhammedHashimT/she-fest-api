@@ -470,7 +470,7 @@ export class CandidateProgrammeService {
 
     // cant change the programme
 
-    if (updateCandidateProgrammeInput.programme_code !== candidateProgramme.programme.programCode) {
+    if (updateCandidateProgrammeInput.programme_code !== candidateProgramme.programme?.programCode) {
       throw new HttpException(`Can't change the programme`, HttpStatus.BAD_REQUEST);
     }
 
@@ -582,7 +582,7 @@ export class CandidateProgrammeService {
       await this.checkEligibility(candidate, programme);
 
       // checking the team of new and old candidate is same
-      if (candidate.team.name !== candidateProgramme.candidate.team.name) {
+      if (candidate.team.name !== candidateProgramme.candidate?.team.name) {
         throw new HttpException(
           `The candidate team is not same as old candidate team`,
           HttpStatus.BAD_REQUEST,
@@ -637,8 +637,8 @@ export class CandidateProgrammeService {
       relations: ['programme', 'programme.category' , 'programme.category.settings', 'candidate', 'candidate.team'],
     });
 
-    const category = candidateProgramme.programme.category;
-    const team = candidateProgramme.candidate.team;
+    const category = candidateProgramme.programme?.category;
+    const team = candidateProgramme.candidate?.team;
 
     // check permission on category
     this.credentialService.checkPermissionOnCategories(user, category.name);
@@ -791,10 +791,10 @@ export class CandidateProgrammeService {
 
       // checking is it covered maximum single programme limit
 
-      if (settings.maxSingle && programme.type == Type.SINGLE) {
+      if (settings.maxSingle && programme?.type == Type.SINGLE) {
         const SinglePrograms: CandidateProgramme[] = candidate.candidateProgrammes.filter(
           (e: CandidateProgramme) => {
-            return e.programme.type == Type.SINGLE 
+            return e.programme?.type == Type.SINGLE 
           },
         );
         if (SinglePrograms.length >= settings.maxSingle) {
@@ -810,7 +810,7 @@ export class CandidateProgrammeService {
       if (settings.maxGroup && programme.type == Type.GROUP) {
         const groupPrograms: CandidateProgramme[] = candidate.candidateProgrammes.filter(
           (e: CandidateProgramme) => {
-            return e.programme.type == Type.GROUP 
+            return e.programme?.type == Type.GROUP 
           },
         );
         if (groupPrograms.length >= settings.maxGroup) {
@@ -826,7 +826,7 @@ export class CandidateProgrammeService {
       if (settings.maxStage && programme.mode == Mode.STAGE && programme.type == Type.SINGLE) {
         const stagePrograms: CandidateProgramme[] = candidate.candidateProgrammes.filter(
           (e: CandidateProgramme) => {
-            return e.programme.mode == Mode.STAGE && e.programme.type == Type.SINGLE 
+            return e.programme?.mode == Mode.STAGE && e.programme?.type == Type.SINGLE 
           },
         );
         if (stagePrograms.length >= settings.maxStage) {
@@ -846,7 +846,7 @@ export class CandidateProgrammeService {
       ) {
         const nonStagePrograms: CandidateProgramme[] = candidate.candidateProgrammes.filter(
           (e: CandidateProgramme) => {
-            return e.programme.mode == Mode.NON_STAGE && e.programme.type == Type.SINGLE 
+            return e.programme?.mode == Mode.NON_STAGE && e.programme?.type == Type.SINGLE 
           },
         );
         if (nonStagePrograms.length >= settings.maxNonStage) {
@@ -866,7 +866,7 @@ export class CandidateProgrammeService {
       ) {
         const outDoorPrograms: CandidateProgramme[] = candidate.candidateProgrammes.filter(
           (e: CandidateProgramme) => {
-            return e.programme.mode == Mode.OUTDOOR_STAGE && e.programme.type == Type.SINGLE 
+            return e.programme?.mode == Mode.OUTDOOR_STAGE && e.programme?.type == Type.SINGLE 
           },
         );
         if (outDoorPrograms.length >= settings.maxOutDoor) {
@@ -984,7 +984,7 @@ export class CandidateProgrammeService {
       if (settings.maxSingle && programme.type == Type.SINGLE) {
         const SinglePrograms: CandidateProgramme[] = candidate.candidateProgrammes.filter(
           (e: CandidateProgramme) => {
-            return e.programme.type == Type.SINGLE;
+            return e.programme?.type == Type.SINGLE;
           },
         );
         if (SinglePrograms.length >= settings.maxSingle) {
@@ -997,7 +997,7 @@ export class CandidateProgrammeService {
       if (settings.maxGroup && programme.type == Type.GROUP) {
         const groupPrograms: CandidateProgramme[] = candidate.candidateProgrammes.filter(
           (e: CandidateProgramme) => {
-            return e.programme.type == Type.GROUP;
+            return e.programme?.type == Type.GROUP;
           },
         );
         if (groupPrograms.length >= settings.maxGroup) {
@@ -1010,7 +1010,7 @@ export class CandidateProgrammeService {
       if (settings.maxStage && programme.mode == Mode.STAGE && programme.type == Type.SINGLE) {
         const stagePrograms: CandidateProgramme[] = candidate.candidateProgrammes.filter(
           (e: CandidateProgramme) => {
-            return e.programme.mode == Mode.STAGE && e.programme.type == Type.SINGLE;
+            return e.programme?.mode == Mode.STAGE && e.programme?.type == Type.SINGLE;
           },
         );
         if (stagePrograms.length >= settings.maxStage) {
@@ -1027,7 +1027,7 @@ export class CandidateProgrammeService {
       ) {
         const nonStagePrograms: CandidateProgramme[] = candidate.candidateProgrammes.filter(
           (e: CandidateProgramme) => {
-            return e.programme.mode == Mode.NON_STAGE && e.programme.type == Type.SINGLE;
+            return e.programme?.mode == Mode.NON_STAGE && e.programme?.type == Type.SINGLE;
           },
         );
         if (nonStagePrograms.length >= settings.maxNonStage) {
@@ -1044,7 +1044,7 @@ export class CandidateProgrammeService {
       ) {
         const outDoorPrograms: CandidateProgramme[] = candidate.candidateProgrammes.filter(
           (e: CandidateProgramme) => {
-            return e.programme.mode == Mode.OUTDOOR_STAGE && e.programme.type == Type.SINGLE;
+            return e.programme?.mode == Mode.OUTDOOR_STAGE && e.programme?.type == Type.SINGLE;
           },
         );
         if (outDoorPrograms.length >= settings.maxOutDoor) {
@@ -1066,7 +1066,7 @@ export class CandidateProgrammeService {
       if (settings.maxSportsSingle && programme.type == Type.SINGLE) {
         const SinglePrograms: CandidateProgramme[] = candidate.candidateProgrammes.filter(
           (e: CandidateProgramme) => {
-            return e.programme.type == Type.SINGLE;
+            return e.programme?.type == Type.SINGLE;
           },
         );
         if (SinglePrograms.length >= settings.maxSportsSingle) {
@@ -1079,7 +1079,7 @@ export class CandidateProgrammeService {
       if (settings.maxSportsGroup && programme.type == Type.GROUP) {
         const groupPrograms: CandidateProgramme[] = candidate.candidateProgrammes.filter(
           (e: CandidateProgramme) => {
-            return e.programme.type == Type.GROUP;
+            return e.programme?.type == Type.GROUP;
           },
         );
         if (groupPrograms.length >= settings.maxSportsGroup) {
