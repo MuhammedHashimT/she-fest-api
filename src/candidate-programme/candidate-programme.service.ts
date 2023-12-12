@@ -391,8 +391,8 @@ export class CandidateProgrammeService {
         .leftJoinAndSelect('candidateProgramme.programme', 'programme')
         .leftJoinAndSelect('candidateProgramme.candidate', 'candidate')
         .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup')
-        .leftJoinAndSelect('CandidateProgramme.zonalgrade', 'grade')
-        .leftJoinAndSelect('candidateProgramme.position', 'position')
+        // .leftJoinAndSelect('CandidateProgramme.zonalgrade', 'grade')
+        // .leftJoinAndSelect('candidateProgramme.position', 'position')
         .leftJoinAndSelect('candidate.team', 'team')
         .leftJoinAndSelect('candidate.category', 'category')
         .leftJoinAndSelect('programme.category', 'programmeCategory')
@@ -425,8 +425,8 @@ export class CandidateProgrammeService {
       relations: [
         'programme',
         'candidate',
-        'grade',
-        'position',
+        // 'grade',
+        // 'position',
         'candidate.team',
         'candidate.category',
         'programme.category',
@@ -634,7 +634,7 @@ export class CandidateProgrammeService {
     // checking is The candidateProgramme exist
     const candidateProgramme: CandidateProgramme = await this.candidateProgrammeRepository.findOne({
       where: { id },
-      relations: ['programme', 'programme.category', 'candidate', 'candidate.team'],
+      relations: ['programme', 'programme.category' , 'programme.category.settings', 'candidate', 'candidate.team'],
     });
 
     const category = candidateProgramme.programme.category;
