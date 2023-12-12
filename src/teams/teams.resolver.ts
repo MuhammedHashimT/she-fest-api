@@ -9,6 +9,7 @@ import { HasRoles, RolesGuard } from 'src/credentials/roles/roles.guard';
 import { Roles } from 'src/credentials/roles/roles.enum';
 import { fieldsProjection } from 'graphql-fields-list';
 import { CredentialsService } from 'src/credentials/credentials.service';
+import { ManyTeamInput } from './dto/many-team.input';
 
 @Resolver(() => Team)
 export class TeamsResolver {
@@ -21,6 +22,13 @@ export class TeamsResolver {
   @UseGuards(RolesGuard)
   createTeam(@Args('createTeamInput') createTeamInput: CreateTeamInput) {
     return this.teamsService.create(createTeamInput);
+  }
+
+  @Mutation(() => [Team])
+  @HasRoles(Roles.Admin , Roles.Controller)
+  @UseGuards(RolesGuard)
+  createManyTeam(@Args('createTeamInput') createTeamInput: ManyTeamInput) {
+    return this.teamsService.createMany(createTeamInput.inputs);
   }
 
   @Query(() => [Team], { name: 'teams' })

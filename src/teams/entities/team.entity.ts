@@ -31,6 +31,7 @@ export class Team {
   name: string;
 
   @Field({ nullable: true })
+  @Column({ nullable: true })
   shortName: string;
 
   @Column({ nullable: true })

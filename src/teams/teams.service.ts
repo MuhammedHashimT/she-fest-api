@@ -16,7 +16,7 @@ export class TeamsService {
 
 async  create(createTeamInput: CreateTeamInput) {
 
-    const { name, shortName, description, color, zoneId } = createTeamInput;
+    const { name,zoneId } = createTeamInput;
 
       const zone = await this.zoneService.findOne(zoneId);
 
@@ -30,11 +30,23 @@ async  create(createTeamInput: CreateTeamInput) {
     try {
       const newTeamInput = this.teamRepository.create({
         name,
-        shortName,
-        description,
-        color,
         zone,
       });
+      return this.teamRepository.save(newTeamInput);
+    } catch (e) {
+      throw new HttpException(
+        'An Error have when creating team ',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        { cause: e },
+      );
+    }
+  }
+
+  // create many teams
+
+  async createMany(createTeamInput: CreateTeamInput[]) {
+    try {
+      const newTeamInput = this.teamRepository.create(createTeamInput);
       return this.teamRepository.save(newTeamInput);
     } catch (e) {
       throw new HttpException(
