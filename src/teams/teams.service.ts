@@ -14,7 +14,7 @@ export class TeamsService {
     private zoneService: ZoneService,
   ) {}
 
-async  create(createTeamInput: CreateTeamInput) {
+ async  create(createTeamInput: CreateTeamInput) {
 
     const { name,zoneId } = createTeamInput;
 
