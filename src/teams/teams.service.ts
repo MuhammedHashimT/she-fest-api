@@ -45,9 +45,36 @@ async  create(createTeamInput: CreateTeamInput) {
   // create many teams
 
   async createMany(createTeamInput: CreateTeamInput[]) {
+    const teams = []
     try {
-      const newTeamInput = this.teamRepository.create(createTeamInput);
-      return this.teamRepository.save(newTeamInput);
+
+    //  loop through the array and create each team
+      for (let index = 0; index < createTeamInput.length; index++) {
+        const element = createTeamInput[index];
+
+        const { name,zoneId } = element;
+
+        const zone = await this.zoneService.findOne(zoneId);
+
+        if (!zone) {
+          throw new HttpException(
+            `cant find zone with id ${zoneId}`,
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+
+        const newTeamInput = this.teamRepository.create({
+          name,
+          zone,
+        });
+
+        await this.teamRepository.save(newTeamInput);
+
+        teams.push(newTeamInput);
+      }
+
+      return teams;
+
     } catch (e) {
       throw new HttpException(
         'An Error have when creating team ',
