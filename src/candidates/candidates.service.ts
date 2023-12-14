@@ -525,11 +525,11 @@ export class CandidatesService {
         totalCandidates = teamCandidates.length;
 
         if (name) {
-          const filteredCandidates = teamCandidates.filter(candidate => candidate.name?.includes(name));
+          const filteredCandidates = teamCandidates.filter(candidate => candidate.name?.toLocaleLowerCase().includes(name.toLocaleLowerCase()));
           // push the candidates to candidates array by limit
           candidates.push(...filteredCandidates.slice(0, limit));
         }else if (chestNo) {
-          const filteredCandidates = teamCandidates.filter(candidate => candidate.chestNO?.includes(chestNo));
+          const filteredCandidates = teamCandidates.filter(candidate => candidate.chestNO.toLocaleLowerCase()?.includes(chestNo.toLocaleLowerCase()));
           // push the candidates to candidates array by limit
           candidates.push(...filteredCandidates.slice(0, limit));
         }
