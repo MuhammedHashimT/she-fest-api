@@ -479,55 +479,127 @@ export class CandidatesService {
     return candidateProgramme;
   }
 
-  // search candidates by name or chestNo with limit
+  
+  // search candidates by name or chestNo with team name , the total count and candidates needed if team given then the total candiates of that team , follow the limit 
 
-  async findByNameOrChestNo(name: string, chestNo: string, limit: number) {
-    try {
-      const candidates = []
+  async findByNameOrChestNo(name: string, chestNo: string, limit: number , teamName: string = null) {
+
+    const candidates = []
+    let totalCandidates = 0;
+
+    // if team name is given then search by team name
+
+    if (teamName) {
+      const team = await this.teamService.findOneByName(teamName, [
+        'id',
+        'name',
+        // 'candidates',
+        'candidates.name',
+        'candidates.chestNO',
+        // 'candidates.category',
+        // 'candidates.category.name',
+        // 'candidates.candidateProgrammes',
+        'candidates.candidateProgrammes.programme',
+        'candidates.candidateProgrammes.programme.name',
+        // 'candidates.candidateProgrammes.programme.type',
+        'candidates.candidateProgrammes.programme.programCode',
+        // 'candidates.candidateProgrammes.programme.resultPublished',
+      ]);
+
+      console.log(team);
       
-      if(name){
-       let cs = await this.candidateRepository.find({
-          where: [
-            {
-              name: Like(`%${name}%`),
-            },
-          ],
-          relations: ['category', 'team', 'candidateProgrammes'],
-          take: limit,
-        });
-        cs.forEach(candidate => {
-          candidates.push(candidate)
-        });
-      }
-      else if(chestNo){
-       let cs = await this.candidateRepository.find({
-          where: [
-            {
-              chestNO: Like(`%${chestNo}%`),
-            },
-          ],
-          relations: ['category', 'team', 'candidateProgrammes'],
-          take: limit,
-        });
-        cs.forEach(candidate => {
-          candidates.push(candidate)
-        });
-      }
-      else{
-       let cs = await this.candidateRepository.find({
-          relations: ['category', 'team', 'candidateProgrammes'],
-          take: limit,
-        });
-        cs.forEach(candidate => {
-          candidates.push(candidate)
-        });
+
+      if (!team) {
+        throw new HttpException(`Cant find team with name ${teamName} `, HttpStatus.BAD_REQUEST);
       }
 
-      return candidates;
-    } catch (e) {
-      throw new HttpException(e.message, HttpStatus.INTERNAL_SERVER_ERROR, { cause: e });
+      // if team found then check the candidates of the team
+
+      const teamCandidates = team.candidates;
+
+      // if candidates found then search by name or chestNo
+
+      if (teamCandidates) {
+        // if name is given then search by name
+
+        totalCandidates = teamCandidates.length;
+
+        if (name) {
+          const filteredCandidates = teamCandidates.filter(candidate => candidate.name?.includes(name));
+          // push the candidates to candidates array by limit
+          candidates.push(...filteredCandidates.slice(0, limit));
+        }else if (chestNo) {
+          const filteredCandidates = teamCandidates.filter(candidate => candidate.chestNO?.includes(chestNo));
+          // push the candidates to candidates array by limit
+          candidates.push(...filteredCandidates.slice(0, limit));
+        }
+        else {
+          // push the candidates to candidates array by limit
+          candidates.push(...teamCandidates.slice(0, limit));
+        }
+      }
+    }else{
+      // if team name is not given then search by name or chestNo
+
+      // if name is given then search by name
+
+      if (name) {
+        const queryBuilder = this.candidateRepository
+          .createQueryBuilder('candidate')
+          .leftJoinAndSelect('candidate.category', 'category')
+          .leftJoinAndSelect('candidate.team', 'team')
+          .leftJoinAndSelect('candidate.candidateProgrammes', 'candidateProgrammes')
+          .leftJoinAndSelect('candidateProgrammes.programme', 'programme')
+          .where('candidate.name LIKE :name', { name: `%${name}%` })
+          .orWhere('candidate.chestNO LIKE :chestNO', { chestNO: `%${name}%` })
+          .take(limit);
+
+        totalCandidates = await queryBuilder.getCount();
+
+        candidates.push(...await queryBuilder.getMany());
+      }else if (chestNo) {
+        const queryBuilder = this.candidateRepository
+          .createQueryBuilder('candidate')
+          .leftJoinAndSelect('candidate.category', 'category')
+          .leftJoinAndSelect('candidate.team', 'team')
+          .leftJoinAndSelect('candidate.candidateProgrammes', 'candidateProgrammes')
+          .leftJoinAndSelect('candidateProgrammes.programme', 'programme')
+          .where('candidate.name LIKE :name', { name: `%${chestNo}%` })
+          .orWhere('candidate.chestNO LIKE :chestNO', { chestNO: `%${chestNo}%` })
+          .take(limit);
+
+          // total count must be the total candidates not the searched candidates
+
+        totalCandidates = await queryBuilder.getCount();
+
+        candidates.push(...await queryBuilder.getMany());
+      }else{
+        // if name and chestNo is not given then return all candidates
+
+        const queryBuilder = this.candidateRepository
+          .createQueryBuilder('candidate')
+          .leftJoinAndSelect('candidate.category', 'category')
+          .leftJoinAndSelect('candidate.team', 'team')
+          .leftJoinAndSelect('candidate.candidateProgrammes', 'candidateProgrammes')
+          .leftJoinAndSelect('candidateProgrammes.programme', 'programme')
+          .take(limit);
+
+          // total count must be the total candidates not the searched candidates
+
+        totalCandidates = await queryBuilder.getCount();
+
+        candidates.push(...await queryBuilder.getMany());
+      }
     }
+
+    return {
+      totalCandidates,
+      candidates
+    }
+
   }
+
+ 
 
 
 
