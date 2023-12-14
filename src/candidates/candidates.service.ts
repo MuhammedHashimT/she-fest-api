@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Injectable, UsePipes, ValidationPipe } from 
 import { InjectRepository } from '@nestjs/typeorm';
 import { CategoryService } from 'src/category/category.service';
 import { TeamsService } from 'src/teams/teams.service';
-import { In, Repository } from 'typeorm';
+import { In, Like, Repository } from 'typeorm';
 import { CreateCandidateInput } from './dto/create-candidate.input';
 import { UpdateCandidateInput } from './dto/update-candidate.input';
 import { Candidate } from './entities/candidate.entity';
@@ -479,28 +479,56 @@ export class CandidatesService {
     return candidateProgramme;
   }
 
-  // find candidates search by name or chestNo with a limit
+  // search candidates by name or chestNo with limit
 
   async findByNameOrChestNo(name: string, chestNo: string, limit: number) {
     try {
-      const candidates = await this.candidateRepository.find({
-        where: [
-          {
-            name: name,
-          },
-          {
-            chestNO: chestNo,
-          },
-        ],
-        relations: ['category', 'team', 'candidateProgrammes'],
-        take: limit,
-      });
+      const candidates = []
+      
+      if(name){
+       let cs = await this.candidateRepository.find({
+          where: [
+            {
+              name: Like(`%${name}%`),
+            },
+          ],
+          relations: ['category', 'team', 'candidateProgrammes'],
+          take: limit,
+        });
+        cs.forEach(candidate => {
+          candidates.push(candidate)
+        });
+      }
+      else if(chestNo){
+       let cs = await this.candidateRepository.find({
+          where: [
+            {
+              chestNO: Like(`%${chestNo}%`),
+            },
+          ],
+          relations: ['category', 'team', 'candidateProgrammes'],
+          take: limit,
+        });
+        cs.forEach(candidate => {
+          candidates.push(candidate)
+        });
+      }
+      else{
+       let cs = await this.candidateRepository.find({
+          relations: ['category', 'team', 'candidateProgrammes'],
+          take: limit,
+        });
+        cs.forEach(candidate => {
+          candidates.push(candidate)
+        });
+      }
 
       return candidates;
     } catch (e) {
       throw new HttpException(e.message, HttpStatus.INTERNAL_SERVER_ERROR, { cause: e });
     }
   }
+
 
 
   async findOverallToppers(fields: string[]) {
