@@ -76,6 +76,18 @@ export class CandidatesResolver {
     return this.candidatesService.findByCategoryNamesAndTeamName(categoriesName, teamName, fields);
   }
 
+  // search candidates by name or chestNo
+  @Query(() => [Candidate], { name: 'searchCandidates' })
+  searchCandidates(
+    @Args('name', { type: () => String }) name: string,
+    @Args('chestNo', { type: () => String }) chestNo: string,
+    @Args('limit', { type: () => Int, nullable: true }) limit: number,
+    @Info() info: any
+  ) {
+    const fields = Object.keys(fieldsProjection(info));
+    return this.candidatesService.findByNameOrChestNo(name, chestNo, limit);
+  }
+
   @Query(() => [Category], { name: 'getCategoryBasedToppers' })
   getCategoryBasedToppers(){
     return this.candidatesService.getCategoryBasedToppers();

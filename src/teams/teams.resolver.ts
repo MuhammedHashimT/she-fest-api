@@ -38,6 +38,14 @@ export class TeamsResolver {
     return this.teamsService.findAll(fields);
   }
 
+  // update many teams
+  @Mutation(() => [Team])
+  @HasRoles(Roles.Admin , Roles.Controller)
+  @UseGuards(RolesGuard)
+  updateManyTeam(@Args('updateTeamInput' ,  { type: () => [UpdateTeamInput] }) updateTeamInput: UpdateTeamInput[]) {
+    return this.teamsService.updateMany(updateTeamInput);
+  }
+
   @Query(() => Team, { name: 'team' })
   async findOne(@Args('id', { type: () => Int }) id: number, @Args('api_key') api_key: string, @Info() info: any) {
     await this.credentialsService.ValidateApiKey(api_key);
