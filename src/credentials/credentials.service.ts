@@ -382,9 +382,9 @@ export class CredentialsService {
           username,
         },
       });
-      if (alreadyUser) {
-        throw new HttpException('User already exists', HttpStatus.BAD_REQUEST);
-      }
+      // if (alreadyUser) {
+      //   throw new HttpException('User already exists', HttpStatus.BAD_REQUEST);
+      // }
 
       const allCategories = await this.categoryService.findAll(['name']);
       const allCategoriesNames = allCategories.map(category => category.name);
@@ -398,22 +398,12 @@ export class CredentialsService {
         categoriesId = await this.categoriesMapper(categories);
       }
 
-      if (roles === (Roles.Controller || Roles.TeamManager) && !categoriesId) {
-        throw new HttpException('You must select at least one category', HttpStatus.BAD_REQUEST);
-      }
-
-      if (roles === Roles.TeamManager && !teamId) {
-        throw new HttpException('You must select a team', HttpStatus.BAD_REQUEST);
-      }
-
       let hashedPassword = await this.LoginService.hashPassword(password);
 
       Object.assign(credential, {
+        id,
         username,
         password: hashedPassword,
-        roles,
-        team: teamId,
-        categories: categoriesId,
       });
 
       updatedCredentials.push(credential);

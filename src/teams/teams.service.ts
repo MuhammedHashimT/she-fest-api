@@ -252,6 +252,40 @@ export class TeamsService {
     }
   }
 
+  // update many teams
+
+  async updateMany(updateTeamInput: UpdateTeamInput[]) {
+    const teams = []
+    try {
+
+    //  loop through the array and create each team
+      for (let index = 0; index < updateTeamInput.length; index++) {
+        const element = updateTeamInput[index];
+
+        const { id } = element;
+
+        const team = await this.teamRepository.findOneBy({ id });
+
+        if (!team) {
+          throw new HttpException(`cant find team with id ${id}`, HttpStatus.BAD_REQUEST);
+        }
+
+        await this.teamRepository.update(id, element);
+
+        teams.push(team);
+      }
+
+      return teams;
+
+    } catch (e) {
+      throw new HttpException(
+        'An Error have when updating team ',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        { cause: e },
+      );
+    }
+  }
+
   async remove(id: number) {
     const team = await this.teamRepository.findOneBy({ id });
 
