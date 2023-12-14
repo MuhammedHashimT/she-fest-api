@@ -193,8 +193,7 @@ export class TeamsService {
       'candidates.candidateProgrammes',
       'candidates.category',
       'candidates.candidateProgrammes.programme',
-      'credentials',
-      'credentials.categories',
+      'zone'
     ];
 
     // validating fields
@@ -206,12 +205,12 @@ export class TeamsService {
       const queryBuilder = this.teamRepository
         .createQueryBuilder('team')
         .where('team.name = :name', { name })
+        .leftJoinAndSelect('team.zone', 'zone')
         .leftJoinAndSelect('team.candidates', 'candidates')
         .leftJoinAndSelect('candidates.candidateProgrammes', 'candidateProgrammes')
         .leftJoinAndSelect('candidates.category', 'category')
         .leftJoinAndSelect('candidateProgrammes.programme', 'programme')
-        .leftJoinAndSelect('team.credentials', 'credentials')
-        .leftJoinAndSelect('credentials.categories', 'categories');
+        .orderBy('team.name', 'ASC');
 
       queryBuilder.select(
         fields.map(column => {

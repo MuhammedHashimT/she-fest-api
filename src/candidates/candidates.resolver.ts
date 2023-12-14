@@ -10,6 +10,7 @@ import { CreateInput } from './dto/create-input.dto';
 import { fieldsProjection } from 'graphql-fields-list';
 import { CredentialsService } from 'src/credentials/credentials.service';
 import { Category } from 'src/category/entities/category.entity';
+import { SearchCandidate } from './dto/search-candidate';
 
 @Resolver(() => Candidate)
 export class CandidatesResolver {
@@ -77,15 +78,20 @@ export class CandidatesResolver {
   }
 
   // search candidates by name or chestNo
-  @Query(() => [Candidate], { name: 'searchCandidates' })
+  @Query(() => 
+  // total count and candidates seperately
+  SearchCandidate
+  
+  , { name: 'searchCandidates' })
   searchCandidates(
     @Args('name', { type: () => String }) name: string,
     @Args('chestNo', { type: () => String }) chestNo: string,
     @Args('limit', { type: () => Int, nullable: true }) limit: number,
+    @Args('teamName', { type: () => String, nullable: true }) teamName: string,
     @Info() info: any
   ) {
     const fields = Object.keys(fieldsProjection(info));
-    return this.candidatesService.findByNameOrChestNo(name, chestNo, limit);
+    return this.candidatesService.findByNameOrChestNo(name, chestNo, limit || 10, teamName);
   }
 
   @Query(() => [Category], { name: 'getCategoryBasedToppers' })

@@ -2,7 +2,7 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "prettier.prettierPath": "./node_modules/prettier",
     "[typescript]": {
-        "editor.defaultFormatter": "vscode.typescript-language-features"
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "cSpell.words": [
         "Finded",
