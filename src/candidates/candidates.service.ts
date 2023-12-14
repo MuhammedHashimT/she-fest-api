@@ -479,6 +479,29 @@ export class CandidatesService {
     return candidateProgramme;
   }
 
+  // find candidates search by name or chestNo with a limit
+
+  async findByNameOrChestNo(name: string, chestNo: string, limit: number) {
+    try {
+      const candidates = await this.candidateRepository.find({
+        where: [
+          {
+            name: name,
+          },
+          {
+            chestNO: chestNo,
+          },
+        ],
+        relations: ['category', 'team', 'candidateProgrammes'],
+        take: limit,
+      });
+
+      return candidates;
+    } catch (e) {
+      throw new HttpException(e.message, HttpStatus.INTERNAL_SERVER_ERROR, { cause: e });
+    }
+  }
+
 
   async findOverallToppers(fields: string[]) {
     const allowedRelations = [

@@ -88,6 +88,65 @@ export class CredentialsService {
     return this.CredentialRepository.save(newCredential);
   }
 
+  // create many
+  async createMany(createCredentialInput: CreateCredentialInput[]) {
+
+    // loop through the array of inputs and check if the username is already exists and find team and categories
+
+    const newCredentials: Credential[] = [];
+
+    for (let index = 0; index < createCredentialInput.length; index++) {
+      const element = createCredentialInput[index];
+
+      const { username, password, categories, roles, team } = element;
+
+      const alreadyUser = await this.CredentialRepository.findOne({
+        where: {
+          username,
+        },
+      });
+
+      // if (alreadyUser) {
+      //   throw new HttpException('User already exists', HttpStatus.BAD_REQUEST);
+      // }
+
+      const allCategories = await this.categoryService.findAll(['name']);
+
+      const allCategoriesNames = allCategories.map(category => category.name);
+
+      let teamId = null;
+      if (team) {
+        console.log(team);
+        
+        teamId = await this.teamService.findOneByName(team, ['id']);
+
+        if (!teamId) {
+          throw new HttpException(  `Team ${team} not found`, HttpStatus.BAD_REQUEST);
+        }
+      }
+
+      let categoriesId = null;
+        categoriesId = await this.categoryService.findAll(['id']);
+      
+      // the the users role and check if he is allowed to create a new user
+
+      let hashedPassword = await this.LoginService.hashPassword(password);
+
+      const newCredential = this.CredentialRepository.create({
+        username,
+        password: hashedPassword,
+        roles: roles,
+        team: teamId,
+        categories: categoriesId,
+      });
+
+      newCredentials.push(newCredential);
+    }
+
+    return this.CredentialRepository.save(newCredentials);
+  }
+
+
   async findAll(fields: string[]) {
     const allowedRelations = ['team', 'categories'];
 
@@ -304,6 +363,63 @@ export class CredentialsService {
     });
 
     return this.CredentialRepository.save(credential);
+  }
+
+  // update many
+
+  async updateMany(updateCredentialInput: UpdateCredentialInput[]) {
+    const updatedCredentials: Credential[] = [];
+
+    for (let index = 0; index < updateCredentialInput.length; index++) {
+      const element = updateCredentialInput[index];
+
+      const { id, categories, team, password, roles, username } = element;
+
+      const credential = await this.findOne(id, ['id']);
+
+      const alreadyUser = await this.CredentialRepository.findOne({
+        where: {
+          username,
+        },
+      });
+      if (alreadyUser) {
+        throw new HttpException('User already exists', HttpStatus.BAD_REQUEST);
+      }
+
+      const allCategories = await this.categoryService.findAll(['name']);
+      const allCategoriesNames = allCategories.map(category => category.name);
+
+      let teamId = null;
+      if (team) {
+        teamId = await this.teamService.findOneByName(team, ['id']);
+      }
+      let categoriesId = null;
+      if (categories) {
+        categoriesId = await this.categoriesMapper(categories);
+      }
+
+      if (roles === (Roles.Controller || Roles.TeamManager) && !categoriesId) {
+        throw new HttpException('You must select at least one category', HttpStatus.BAD_REQUEST);
+      }
+
+      if (roles === Roles.TeamManager && !teamId) {
+        throw new HttpException('You must select a team', HttpStatus.BAD_REQUEST);
+      }
+
+      let hashedPassword = await this.LoginService.hashPassword(password);
+
+      Object.assign(credential, {
+        username,
+        password: hashedPassword,
+        roles,
+        team: teamId,
+        categories: categoriesId,
+      });
+
+      updatedCredentials.push(credential);
+    }
+
+    return this.CredentialRepository.save(updatedCredentials);
   }
 
   async remove(id: number, user: Credential) {

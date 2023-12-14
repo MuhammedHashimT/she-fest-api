@@ -31,6 +31,18 @@ export class CredentialsResolver {
     return this.credentialsService.findAll(fields);
   }
 
+  // create many credentials
+  @Mutation(() => [Credential])
+  @HasRoles(Roles.Controller, Roles.Admin, Roles.TeamManager)
+  @UseGuards(RolesGuard)
+  createManyCredentials(
+    @Args('createCredentialInput', { type: () => [CreateCredentialInput] })
+    createCredentialInput: CreateCredentialInput[],
+    @Context('req') req: any,
+  ) {
+    return this.credentialsService.createMany(createCredentialInput);
+  }
+
 
   @Query(() => [Credential], { name: 'credentialsByTeam' })
   async findAllByTeam(@Args('team', { type: () => String }) team: string, @Args('api_key') api_key: string,) {
@@ -60,6 +72,18 @@ export class CredentialsResolver {
     @Context('req') request: any,
   ) {
     return this.credentialsService.update(updateCredentialInput, request.user);
+  }
+
+  // update many credentials
+  @Mutation(() => [Credential])
+  @HasRoles(Roles.Controller, Roles.Admin, Roles.TeamManager)
+  @UseGuards(RolesGuard)
+  updateManyCredentials(
+    @Args('updateCredentialInput', { type: () => [UpdateCredentialInput] })
+    updateCredentialInput: UpdateCredentialInput[],
+    @Context('req') req: any,
+  ) {
+    return this.credentialsService.updateMany(updateCredentialInput);
   }
 
   @Mutation(() => Credential)
