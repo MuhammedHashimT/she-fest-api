@@ -216,43 +216,31 @@ export class CandidatesService {
     ];
 
     // validating fields
-    fields = fieldsValidator(fields , allowedRelations);
+    fields = fieldsValidator(fields, allowedRelations);
     // checking if fields contains id
     fields = fieldsIdChecker(fields);
 
     try {
-      const candidate = await this.candidateRepository.find({
-        relations: ['category', 'team', 'candidateProgrammes' , 'cgp'],
-      });
+      const queryBuilder = this.candidateRepository
+        .createQueryBuilder('candidate')
+        .leftJoinAndSelect('candidate.category', 'category')
+        .leftJoinAndSelect('candidate.team', 'team')
+        .leftJoinAndSelect('candidate.candidateProgrammes', 'candidateProgrammes')
+        .leftJoinAndSelect('candidateProgrammes.programme', 'programme');
 
-      if (!candidate) {
-        throw new HttpException(
-          `Cant find candidates`,
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-      // set the cgp to candidateProgrammes array with what already in candidateProgrammes
+      queryBuilder.select(
+        fields.map(column => {
+          const splitted = column.split('.');
 
-      const settedCandidates = candidate.map(candidate => {
-        const cgp = candidate.cgp;
-
-        const candidateProgrammes = candidate.candidateProgrammes;
-
-        cgp.forEach(cgp => {
-          const isAlready = candidateProgrammes.some(candidateProgramme => candidateProgramme.programme.id === cgp.programme.id);
-  
-          if (!isAlready) {
-            candidateProgrammes.push(cgp);
+          if (splitted.length > 1) {
+            return `${splitted[splitted.length - 2]}.${splitted[splitted.length - 1]}`;
+          } else {
+            return `candidate.${column}`;
           }
-        });
-
-        candidate.candidateProgrammes = candidateProgrammes;
-
-        return candidate;
-      });
-
-
-      return settedCandidates;
+        }),
+      );
+      const candidate = await queryBuilder.getMany();
+      return candidate;
     } catch (e) {
       throw new HttpException(
         'An Error have when finding candidate ',
@@ -390,7 +378,6 @@ export class CandidatesService {
 
       return candidate;
     } catch (e) {
-      console.log(e);
       
       throw new HttpException(
         'An Error have when finding candidate',
@@ -549,7 +536,6 @@ export class CandidatesService {
         // 'candidates.candidateProgrammes.programme.resultPublished',
       ]);
 
-      console.log(team);
       
 
       if (!team) {
@@ -686,7 +672,7 @@ export class CandidatesService {
       // sort the candidates by individual point
       const candidatePromises = candidates.map(async (candidate: Candidate) => {
         const total: CategorySettings = await this.categorySettingsService.findOne(candidate.category.id, ['id', 'maxSingle']);
-        console.log(total);
+      
 
         return { candidate, total };
       });
@@ -707,7 +693,7 @@ export class CandidatesService {
           });
 
           // Now you have sortedCandidates as an array of objects with candidate and total properties
-          console.log(sortedCandidates);
+         
         })
         .catch((error) => {
           // Handle any errors that occurred during data retrieval or sorting
