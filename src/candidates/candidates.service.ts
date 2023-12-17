@@ -216,31 +216,43 @@ export class CandidatesService {
     ];
 
     // validating fields
-    fields = fieldsValidator(fields, allowedRelations);
+    fields = fieldsValidator(fields , allowedRelations);
     // checking if fields contains id
     fields = fieldsIdChecker(fields);
 
     try {
-      const queryBuilder = this.candidateRepository
-        .createQueryBuilder('candidate')
-        .leftJoinAndSelect('candidate.category', 'category')
-        .leftJoinAndSelect('candidate.team', 'team')
-        .leftJoinAndSelect('candidate.candidateProgrammes', 'candidateProgrammes')
-        .leftJoinAndSelect('candidateProgrammes.programme', 'programme');
+      const candidate = await this.candidateRepository.find({
+        relations: ['category', 'team', 'candidateProgrammes' , 'cgp'],
+      });
 
-      queryBuilder.select(
-        fields.map(column => {
-          const splitted = column.split('.');
+      if (!candidate) {
+        throw new HttpException(
+          `Cant find candidates`,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      // set the cgp to candidateProgrammes array with what already in candidateProgrammes
 
-          if (splitted.length > 1) {
-            return `${splitted[splitted.length - 2]}.${splitted[splitted.length - 1]}`;
-          } else {
-            return `candidate.${column}`;
+      const settedCandidates = candidate.map(candidate => {
+        const cgp = candidate.cgp;
+
+        const candidateProgrammes = candidate.candidateProgrammes;
+
+        cgp.forEach(cgp => {
+          const isAlready = candidateProgrammes.some(candidateProgramme => candidateProgramme.programme.id === cgp.programme.id);
+  
+          if (!isAlready) {
+            candidateProgrammes.push(cgp);
           }
-        }),
-      );
-      const candidate = await queryBuilder.getMany();
-      return candidate;
+        });
+
+        candidate.candidateProgrammes = candidateProgrammes;
+
+        return candidate;
+      });
+
+
+      return settedCandidates;
     } catch (e) {
       throw new HttpException(
         'An Error have when finding candidate ',
@@ -330,6 +342,8 @@ export class CandidatesService {
 
   async findOne(id: number, fields: string[]) {
     const allowedRelations = [
+      'cgp',
+      'cgp.programme',
       'category',
       'team',
       'candidateProgrammes',
@@ -343,32 +357,43 @@ export class CandidatesService {
     // checking if fields contains id
     fields = fieldsIdChecker(fields);
     try {
-      const queryBuilder = this.candidateRepository
-        .createQueryBuilder('candidate')
-        .where('candidate.id = :id', { id })
-        .leftJoinAndSelect('candidate.category', 'category')
-        .leftJoinAndSelect('candidate.team', 'team')
-        .leftJoinAndSelect('candidate.candidateProgrammes', 'candidateProgrammes')
-        .leftJoinAndSelect('candidateProgrammes.programme', 'programme')
-        // .leftJoinAndSelect('candidateProgrammes.position', 'position')
-        // .leftJoinAndSelect('candidateProgrammes.grade', 'grade');
+      const candidate = await this.candidateRepository.findOne({
+        where: {
+          id,
+        },
+        relations: ['category', 'team', 'candidateProgrammes' , 'cgp'],
+      });
 
-      queryBuilder.select(
-        fields.map(column => {
-          const splitted = column.split('.');
+      if (!candidate) {
+        throw new HttpException(
+          `Cant find candidate with chest no ${id} `,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
 
-          if (splitted.length > 1) {
-            return `${splitted[splitted.length - 2]}.${splitted[splitted.length - 1]}`;
-          } else {
-            return `candidate.${column}`;
-          }
-        }),
-      );
-      const candidate = await queryBuilder.getOne();
+      const cgp = candidate.cgp || [];
+
+      const candidateProgrammes = candidate.candidateProgrammes || [];
+
+      // if cgp.programme is not already in candidateProgrammes.programme then push cgp to 
+      // candidateProgrammes  
+
+      cgp.forEach(cgp => {
+        const isAlready = candidateProgrammes.some(candidateProgramme => candidateProgramme.programme.id === cgp.programme.id);
+
+        if (!isAlready) {
+          candidateProgrammes.push(cgp);
+        }
+      });
+
+      candidate.candidateProgrammes = candidateProgrammes;
+
       return candidate;
     } catch (e) {
+      console.log(e);
+      
       throw new HttpException(
-        'An Error have when finding candidate ',
+        'An Error have when finding candidate',
         HttpStatus.INTERNAL_SERVER_ERROR,
         { cause: e },
       );
@@ -381,7 +406,7 @@ export class CandidatesService {
         where: {
           chestNO,
         },
-        relations: ['category', 'team', 'candidateProgrammes'],
+        relations: ['category', 'team', 'candidateProgrammes' , 'cgp'],
       });
 
       if (!candidate) {
@@ -390,6 +415,24 @@ export class CandidatesService {
           HttpStatus.BAD_REQUEST,
         );
       }
+
+      // change what in cgp to candidateProgrammes with what already in candidateProgrammes
+      const cgp = candidate.cgp || [];
+
+      const candidateProgrammes = candidate.candidateProgrammes || [];
+
+      // if cgp.programme is not already in candidateProgrammes.programme then push cgp to 
+      // candidateProgrammes  
+
+      cgp.forEach(cgp => {
+        const isAlready = candidateProgrammes.some(candidateProgramme => candidateProgramme.programme.id === cgp.programme.id);
+
+        if (!isAlready) {
+          candidateProgrammes.push(cgp);
+        }
+      });
+
+      candidate.candidateProgrammes = candidateProgrammes;
 
       return candidate;
     } catch (e) {
