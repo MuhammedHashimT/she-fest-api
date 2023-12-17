@@ -526,14 +526,14 @@ export class CandidatesService {
         // 'candidates',
         'candidates.name',
         'candidates.chestNO',
-        // 'candidates.category',
-        // 'candidates.category.name',
+        'candidates.category',
+        'candidates.category.name',
         // 'candidates.candidateProgrammes',
         'candidates.candidateProgrammes.programme',
         'candidates.candidateProgrammes.programme.name',
-        // 'candidates.candidateProgrammes.programme.type',
+        'candidates.candidateProgrammes.programme.type',
         'candidates.candidateProgrammes.programme.programCode',
-        // 'candidates.candidateProgrammes.programme.resultPublished',
+        'candidates.candidateProgrammes.programme.resultPublished',
       ]);
 
       
