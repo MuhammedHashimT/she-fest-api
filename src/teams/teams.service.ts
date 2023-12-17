@@ -184,6 +184,7 @@ export class TeamsService {
   }
 
   async findOneByName(name: string, fields: string[]) {
+
     if (!name) {
       throw new HttpException(`team cannot be undefined`, HttpStatus.BAD_REQUEST);
     }
@@ -234,13 +235,13 @@ export class TeamsService {
       
       // change in team of candiates what in cgp to candidateProgrammes with what already in candidateProgrammes
 
-      const candidates = team.candidates.map(candidate => {
-        const candidateProgrammes = candidate.cgp.map(cgp => {
+      const candidates = team?.candidates?.map(candidate => {
+        const candidateProgrammes = candidate?.cgp?.map(cgp => {
           return {
             ...cgp,
-            candidateProgrammes: candidate.candidateProgrammes
+            candidateProgrammes: candidate?.candidateProgrammes
           }
-        })
+        }) || candidate.candidateProgrammes || [];
 
         return {
           ...candidate,
@@ -248,7 +249,7 @@ export class TeamsService {
         }
       })
 
-      team.candidates = candidates;
+      team.candidates = candidates; 
        
       return team;
     } catch (e) {
