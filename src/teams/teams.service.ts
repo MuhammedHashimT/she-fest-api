@@ -204,29 +204,18 @@ export class TeamsService {
     fields = fieldsIdChecker(fields);
 
     try {
-      const queryBuilder = this.teamRepository
-        .createQueryBuilder('team')
-        .where('team.name = :name', { name })
-        .leftJoinAndSelect('team.zone', 'zone')
-        .leftJoinAndSelect('team.candidates', 'candidates')
-        .leftJoinAndSelect('candidates.candidateProgrammes', 'candidateProgrammes')
-        .leftJoinAndSelect('candidates.cgp', 'cgp')
-        .leftJoinAndSelect('candidates.category', 'category')
-        .leftJoinAndSelect('candidateProgrammes.programme', 'programme')
-        .orderBy('team.name', 'ASC');
 
-      queryBuilder.select(
-        fields.map(column => {
-          const splitted = column.split('.');
-
-          if (splitted.length > 1) {
-            return `${splitted[splitted.length - 2]}.${splitted[splitted.length - 1]}`;
-          } else {
-            return `team.${column}`;
-          }
-        }),
-      );
-      const team = await queryBuilder.getOne();
+      const team = await this.teamRepository.findOne({
+        where: { name },
+        relations: [
+          'candidates',
+          'candidates.cgp',
+          'candidates.candidateProgrammes',
+          'candidates.category',
+          'candidates.candidateProgrammes.programme',
+          'zone'
+        ],
+      })
 
       if (!team) {
         throw new HttpException(`cant find team with name ${name}`, HttpStatus.BAD_REQUEST);
@@ -236,12 +225,16 @@ export class TeamsService {
       // change in team of candiates what in cgp to candidateProgrammes with what already in candidateProgrammes
 
       const candidates = team?.candidates?.map(candidate => {
-        const candidateProgrammes = candidate?.cgp?.map(cgp => {
-          return {
-            ...cgp,
-            candidateProgrammes: candidate?.candidateProgrammes
-          }
-        }) || candidate.candidateProgrammes || [];
+      
+        const candidateProgrammes= [];
+
+        candidate.cgp?.map(cgp => {
+          candidateProgrammes.push(cgp);
+        })
+
+        candidate.candidateProgrammes?.map(candidateProgramme => {
+          candidateProgrammes.push(candidateProgramme);
+        })
 
         return {
           ...candidate,
