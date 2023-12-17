@@ -190,6 +190,7 @@ export class TeamsService {
 
     const allowedRelations = [
       'candidates',
+      'candidates.cgp',
       'candidates.candidateProgrammes',
       'candidates.category',
       'candidates.candidateProgrammes.programme',
@@ -208,6 +209,7 @@ export class TeamsService {
         .leftJoinAndSelect('team.zone', 'zone')
         .leftJoinAndSelect('team.candidates', 'candidates')
         .leftJoinAndSelect('candidates.candidateProgrammes', 'candidateProgrammes')
+        .leftJoinAndSelect('candidates.cgp', 'cgp')
         .leftJoinAndSelect('candidates.category', 'category')
         .leftJoinAndSelect('candidateProgrammes.programme', 'programme')
         .orderBy('team.name', 'ASC');
@@ -224,6 +226,30 @@ export class TeamsService {
         }),
       );
       const team = await queryBuilder.getOne();
+
+      if (!team) {
+        throw new HttpException(`cant find team with name ${name}`, HttpStatus.BAD_REQUEST);
+      }
+
+      
+      // change in team of candiates what in cgp to candidateProgrammes with what already in candidateProgrammes
+
+      const candidates = team.candidates.map(candidate => {
+        const candidateProgrammes = candidate.cgp.map(cgp => {
+          return {
+            ...cgp,
+            candidateProgrammes: candidate.candidateProgrammes
+          }
+        })
+
+        return {
+          ...candidate,
+          candidateProgrammes
+        }
+      })
+
+      team.candidates = candidates;
+       
       return team;
     } catch (e) {
       throw new HttpException(
