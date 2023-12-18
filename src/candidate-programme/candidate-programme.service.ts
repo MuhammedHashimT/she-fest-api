@@ -777,17 +777,20 @@ export class CandidateProgrammeService {
     const settings: CategorySettings = category.settings;
 
     // checking is it covered maximum programme limit
-    if (programme.type !== Type.HOUSE) {
-      if (settings.maxProgram && (programme.type == Type.SINGLE || programme.type == Type.GROUP)) {
-        const programmes: CandidateProgramme[] = candidate.candidateProgrammes;
 
-        if (programmes.length >= settings.maxProgram) {
-          throw new HttpException(
-            'The candidate has covered maximum programme count',
-            HttpStatus.BAD_REQUEST,
-          );
-        }
+    if (settings.maxProgram) {
+      const programmes: CandidateProgramme[] = candidate.candidateProgrammes;
+
+      if (programmes.length >= settings.maxProgram) {
+        throw new HttpException(
+          'The candidate has covered maximum programme count',
+          HttpStatus.BAD_REQUEST,
+        );
       }
+    }
+    
+    if (programme.type !== Type.HOUSE) {
+
 
       // checking is it covered maximum single programme limit
 
