@@ -8,6 +8,7 @@ import { CategoryModule } from 'src/category/category.module';
 import { CredentialsModule } from 'src/credentials/credentials.module';
 import { CandidateProgrammeModule } from 'src/candidate-programme/candidate-programme.module';
 import { CategorySettingsModule } from 'src/category-settings/category-settings.module';
+import { ProgrammesModule } from 'src/programmes/programmes.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { CategorySettingsModule } from 'src/category-settings/category-settings.
     CategoryModule,
     CredentialsModule,
     CategorySettingsModule ,
+    ProgrammesModule,
     forwardRef(() => CandidateProgrammeModule),
   ],
   providers: [CandidatesResolver, CandidatesService],

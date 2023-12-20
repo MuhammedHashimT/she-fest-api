@@ -13,9 +13,11 @@ import { Team } from 'src/teams/entities/team.entity';
 import { CreateInput } from './dto/create-input.dto';
 import { CredentialsService } from 'src/credentials/credentials.service';
 import { fieldsIdChecker, fieldsValidator } from 'src/utils/util';
-import {  Type } from 'src/programmes/entities/programme.entity';
+import { Type } from 'src/programmes/entities/programme.entity';
 import { CategorySettings } from 'src/category-settings/entities/category-setting.entity';
 import { CategorySettingsService } from 'src/category-settings/category-settings.service';
+import { ProgrammesService } from 'src/programmes/programmes.service';
+import { CandidateProgramme } from 'src/candidate-programme/entities/candidate-programme.entity';
 // import { drive } from 'src/utils/googleApi.auth';
 
 @Injectable()
@@ -27,7 +29,8 @@ export class CandidatesService {
     private candidateProgrammeService: CandidateProgrammeService,
     private credentialService: CredentialsService,
     private categorySettingsService: CategorySettingsService,
-  ) { }
+    private programmeService: ProgrammesService,
+  ) {}
 
   //  To create many candidates at a time , Normally using on Excel file upload
 
@@ -212,7 +215,7 @@ export class CandidatesService {
       'team',
       'candidateProgrammes',
       'candidateProgrammes.programme',
-
+      'team.zone',
     ];
 
     // validating fields
@@ -225,6 +228,7 @@ export class CandidatesService {
         .createQueryBuilder('candidate')
         .leftJoinAndSelect('candidate.category', 'category')
         .leftJoinAndSelect('candidate.team', 'team')
+        .leftJoinAndSelect('team.zone', 'zone')
         .leftJoinAndSelect('candidate.candidateProgrammes', 'candidateProgrammes')
         .leftJoinAndSelect('candidateProgrammes.programme', 'programme');
 
@@ -290,7 +294,6 @@ export class CandidatesService {
   // find candidates by category name and team name
 
   async findByCategoryNamesAndTeamName(categories: string[], teamName: string, fields: string[]) {
-
     const allowedRelations = ['category', 'team'];
 
     // validating fields
@@ -303,7 +306,7 @@ export class CandidatesService {
         .where('candidate.category.name IN (:...categories)', { categories })
         .andWhere('candidate.team.name = :teamName', { teamName })
         .leftJoinAndSelect('candidate.category', 'category')
-        .leftJoinAndSelect('candidate.team', 'team')
+        .leftJoinAndSelect('candidate.team', 'team');
 
       queryBuilder.select(
         fields.map(column => {
@@ -327,13 +330,13 @@ export class CandidatesService {
     }
   }
 
-
   async findOne(id: number, fields: string[]) {
     const allowedRelations = [
       'cgp',
       'cgp.programme',
       'category',
       'team',
+      'team.zone',
       'candidateProgrammes',
       'candidateProgrammes.programme',
       'candidateProgrammes.position',
@@ -349,25 +352,24 @@ export class CandidatesService {
         where: {
           id,
         },
-        relations: ['category', 'team', 'candidateProgrammes' , 'cgp'],
+        relations: ['category', 'team', 'candidateProgrammes', 'cgp', 'team.zone'],
       });
 
       if (!candidate) {
-        throw new HttpException(
-          `Cant find candidate with chest no ${id} `,
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new HttpException(`Cant find candidate with chest no ${id} `, HttpStatus.BAD_REQUEST);
       }
 
       const cgp = candidate.cgp || [];
 
       const candidateProgrammes = candidate.candidateProgrammes || [];
 
-      // if cgp.programme is not already in candidateProgrammes.programme then push cgp to 
-      // candidateProgrammes  
+      // if cgp.programme is not already in candidateProgrammes.programme then push cgp to
+      // candidateProgrammes
 
       cgp.forEach(cgp => {
-        const isAlready = candidateProgrammes.some(candidateProgramme => candidateProgramme.programme.id === cgp.programme.id);
+        const isAlready = candidateProgrammes.some(
+          candidateProgramme => candidateProgramme.programme.id === cgp.programme.id,
+        );
 
         if (!isAlready) {
           candidateProgrammes.push(cgp);
@@ -378,7 +380,6 @@ export class CandidatesService {
 
       return candidate;
     } catch (e) {
-      
       throw new HttpException(
         'An Error have when finding candidate',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -393,7 +394,7 @@ export class CandidatesService {
         where: {
           chestNO,
         },
-        relations: ['category', 'team', 'candidateProgrammes' , 'cgp'],
+        relations: ['category', 'team', 'candidateProgrammes', 'cgp', 'team.zone'],
       });
 
       if (!candidate) {
@@ -403,16 +404,17 @@ export class CandidatesService {
         );
       }
 
-      // change what in cgp to candidateProgrammes with what already in candidateProgrammes
+      // // change what in cgp to candidateProgrammes with what already in candidateProgrammes
       const cgp = candidate.cgp || [];
 
       const candidateProgrammes = candidate.candidateProgrammes || [];
 
-      // if cgp.programme is not already in candidateProgrammes.programme then push cgp to 
-      // candidateProgrammes  
+      // if cgp.programme is not already in candidateProgrammes.programme then push cgp to
 
       cgp.forEach(cgp => {
-        const isAlready = candidateProgrammes.some(candidateProgramme => candidateProgramme.programme.id === cgp.programme.id);
+        const isAlready = candidateProgrammes.some(
+          candidateProgramme => candidateProgramme.programme.id === cgp.programme.id,
+        );
 
         if (!isAlready) {
           candidateProgrammes.push(cgp);
@@ -428,12 +430,14 @@ export class CandidatesService {
   }
 
   async findOneByChestNoWithoutError(chestNO: string) {
+    console.log(chestNO);
+
     try {
       const candidate = await this.candidateRepository.findOne({
         where: {
           chestNO,
         },
-        relations: ['category', 'team', 'candidateProgrammes'],
+        relations: ['category', 'team', 'candidateProgrammes', 'cgp', 'team.zone'],
       });
 
       if (!candidate) {
@@ -447,7 +451,7 @@ export class CandidatesService {
   }
 
   async findOneByChesNoByFields(chestNO: string, fields: string[]) {
-    const allowedRelations = ['category', 'team', 'candidateProgrammes'];
+    const allowedRelations = ['category', 'team', 'candidateProgrammes', 'cgp', 'team.zone'];
 
     // validating fields
     fields = fieldsValidator(fields, allowedRelations);
@@ -459,6 +463,7 @@ export class CandidatesService {
         .where('candidate.chestNO = :chestNO', { chestNO })
         .leftJoinAndSelect('candidate.category', 'category')
         .leftJoinAndSelect('candidate.team', 'team')
+        .leftJoinAndSelect('team.zone', 'zone')
         .leftJoinAndSelect('candidate.candidateProgrammes', 'candidateProgrammes')
         .leftJoinAndSelect('candidateProgrammes.programme', 'programme');
 
@@ -509,12 +514,10 @@ export class CandidatesService {
     return candidateProgramme;
   }
 
-  
-  // search candidates by name or chestNo with team name , the total count and candidates needed if team given then the total candiates of that team , follow the limit 
+  // search candidates by name or chestNo with team name , the total count and candidates needed if team given then the total candiates of that team , follow the limit
 
-  async findByNameOrChestNo(name: string, chestNo: string, limit: number , teamName: string = null) {
-
-    const candidates = []
+  async findByNameOrChestNo(name: string, chestNo: string, limit: number, teamName: string = null) {
+    const candidates = [];
     let totalCandidates = 0;
 
     // if team name is given then search by team name
@@ -539,8 +542,6 @@ export class CandidatesService {
         'candidates.candidateProgrammes.programme.resultPublished',
       ]);
 
-      
-
       if (!team) {
         throw new HttpException(`Cant find team with name ${teamName} `, HttpStatus.BAD_REQUEST);
       }
@@ -557,20 +558,23 @@ export class CandidatesService {
         totalCandidates = teamCandidates.length;
 
         if (name) {
-          const filteredCandidates = teamCandidates.filter(candidate => candidate.name?.toLocaleLowerCase().includes(name.toLocaleLowerCase()));
+          const filteredCandidates = teamCandidates.filter(candidate =>
+            candidate.name?.toLocaleLowerCase().includes(name.toLocaleLowerCase()),
+          );
           // push the candidates to candidates array by limit
           candidates.push(...filteredCandidates.slice(0, limit));
-        }else if (chestNo) {
-          const filteredCandidates = teamCandidates.filter(candidate => candidate.chestNO.toLocaleLowerCase()?.includes(chestNo.toLocaleLowerCase()));
+        } else if (chestNo) {
+          const filteredCandidates = teamCandidates.filter(candidate =>
+            candidate.chestNO.toLocaleLowerCase()?.includes(chestNo.toLocaleLowerCase()),
+          );
           // push the candidates to candidates array by limit
           candidates.push(...filteredCandidates.slice(0, limit));
-        }
-        else {
+        } else {
           // push the candidates to candidates array by limit
           candidates.push(...teamCandidates.slice(0, limit));
         }
       }
-    }else{
+    } else {
       // if team name is not given then search by name or chestNo
 
       // if name is given then search by name
@@ -588,8 +592,8 @@ export class CandidatesService {
 
         totalCandidates = await queryBuilder.getCount();
 
-        candidates.push(...await queryBuilder.getMany());
-      }else if (chestNo) {
+        candidates.push(...(await queryBuilder.getMany()));
+      } else if (chestNo) {
         const queryBuilder = this.candidateRepository
           .createQueryBuilder('candidate')
           .leftJoinAndSelect('candidate.category', 'category')
@@ -600,12 +604,12 @@ export class CandidatesService {
           .orWhere('candidate.chestNO LIKE :chestNO', { chestNO: `%${chestNo}%` })
           .take(limit);
 
-          // total count must be the total candidates not the searched candidates
+        // total count must be the total candidates not the searched candidates
 
         totalCandidates = await queryBuilder.getCount();
 
-        candidates.push(...await queryBuilder.getMany());
-      }else{
+        candidates.push(...(await queryBuilder.getMany()));
+      } else {
         // if name and chestNo is not given then return all candidates
 
         const queryBuilder = this.candidateRepository
@@ -616,24 +620,19 @@ export class CandidatesService {
           .leftJoinAndSelect('candidateProgrammes.programme', 'programme')
           .take(limit);
 
-          // total count must be the total candidates not the searched candidates
+        // total count must be the total candidates not the searched candidates
 
         totalCandidates = await queryBuilder.getCount();
 
-        candidates.push(...await queryBuilder.getMany());
+        candidates.push(...(await queryBuilder.getMany()));
       }
     }
 
     return {
       totalCandidates,
-      candidates
-    }
-
+      candidates,
+    };
   }
-
- 
-
-
 
   async findOverallToppers(fields: string[]) {
     const allowedRelations = [
@@ -641,7 +640,7 @@ export class CandidatesService {
       'team',
       'candidateProgrammes',
       'candidateProgrammes.programme',
-
+      'team.zone',
     ];
 
     // validating fields
@@ -656,7 +655,8 @@ export class CandidatesService {
         .leftJoinAndSelect('candidate.team', 'team')
         .leftJoinAndSelect('candidate.candidateProgrammes', 'candidateProgrammes')
         .leftJoinAndSelect('candidateProgrammes.programme', 'programme')
-        .orderBy('candidate.individualPoint', 'ASC')
+        .leftJoinAndSelect('team.zone', 'zone')
+        .orderBy('candidate.individualPoint', 'ASC');
 
       queryBuilder.select(
         fields.map(column => {
@@ -669,25 +669,30 @@ export class CandidatesService {
           }
         }),
       );
-      const candidates: Candidate[] = await queryBuilder.getMany()
-
+      const candidates: Candidate[] = await queryBuilder.getMany();
 
       // sort the candidates by individual point
       const candidatePromises = candidates.map(async (candidate: Candidate) => {
-        const total: CategorySettings = await this.categorySettingsService.findOne(candidate.category.id, ['id', 'maxSingle']);
-      
+        const total: CategorySettings = await this.categorySettingsService.findOne(
+          candidate.category.id,
+          ['id', 'maxSingle'],
+        );
 
         return { candidate, total };
       });
 
       Promise.all(candidatePromises)
-        .then((candidateTotals) => {
+        .then(candidateTotals => {
           // Sort the candidates based on the totals
           const sortedCandidates = candidateTotals.sort((a, b) => {
             const aMax = a.total.maxSingle * 8;
             const bMax = b.total.maxSingle * 8;
-            const aTotal = a.candidate.individualPoint ? a.candidate.individualPoint : 0 / aMax * 100;
-            const bTotal = b.candidate.individualPoint ? b.candidate.individualPoint : 0 / bMax * 100;
+            const aTotal = a.candidate.individualPoint
+              ? a.candidate.individualPoint
+              : (0 / aMax) * 100;
+            const bTotal = b.candidate.individualPoint
+              ? b.candidate.individualPoint
+              : (0 / bMax) * 100;
 
             if (a.candidate.category.name == 'THANAWIYYA' || 'ALIYA') {
               return bTotal - aTotal;
@@ -696,15 +701,11 @@ export class CandidatesService {
           });
 
           // Now you have sortedCandidates as an array of objects with candidate and total properties
-         
         })
-        .catch((error) => {
+        .catch(error => {
           // Handle any errors that occurred during data retrieval or sorting
           console.error(error);
         });
-
-
-
 
       return candidates;
     } catch (e) {
@@ -719,116 +720,124 @@ export class CandidatesService {
   // category based toppers
 
   async getCategoryBasedToppers() {
-
     // get all candidates and their candidate programmes then add the points in candiate programmes to candiate and sort them by points and return the top 5
     // candidates must be category based
 
     // get all candidates
 
     const candidates = await this.candidateRepository.find({
-      relations: ['candidateProgrammes', 'category' , 'candidateProgrammes.programme' , 'team'],
+      relations: [
+        'candidateProgrammes',
+        'category',
+        'candidateProgrammes.programme',
+        'team',
+        'team.zone',
+      ],
     });
 
     const categories = await this.categoryService.findAll(['id', 'name']);
 
-    const pointedCandidates = candidates.map((candidate , i) => {
+    const pointedCandidates = candidates.map((candidate, i) => {
       let total = 0;
       let totalSports = 0;
       candidate.candidateProgrammes.forEach(candidateProgramme => {
-
-        if(candidateProgramme.programme?.type === Type.SINGLE){
-          total = total + candidateProgramme.point;
+        if (candidateProgramme.programme?.type === Type.SINGLE) {
+          total = total + candidateProgramme.zonalpoint;
         }
-
-
       });
-
 
       return {
         ...candidate,
         individualPoint: total,
         individualSportsPoint: totalSports,
-      }
-
-
-    }
-    );
+      };
+    });
 
     // setting the category based toppers
 
     const candaidatedByCategory = categories.map(category => {
-      const candidates = pointedCandidates.filter(candidate => candidate.category.name === category.name);
+      const candidates = pointedCandidates.filter(
+        candidate => candidate.category.name === category.name,
+      );
 
-      const sortedCandidates = candidates.slice().sort((a, b) => b.individualPoint - a.individualPoint);
-      const sortedSportsCandidates = candidates.slice().sort((a, b) => b.individualSportsPoint - a.individualSportsPoint);
+      const sortedCandidates = candidates
+        .slice()
+        .sort((a, b) => b.individualPoint - a.individualPoint);
+      const sortedSportsCandidates = candidates
+        .slice()
+        .sort((a, b) => b.individualSportsPoint - a.individualSportsPoint);
 
       return {
         ...category,
-       candidates: [...sortedCandidates.slice(0, 5) , ...sortedSportsCandidates.slice(0, 5)]
-      }
-    }
-    );
+        candidates: [...sortedCandidates.slice(0, 5), ...sortedSportsCandidates.slice(0, 5)],
+      };
+    });
 
     // log first 5 candidates
     // console.log(pointedCandidates.sort((a, b) => b.total - a.total).slice(0, 5));
-    
 
     return candaidatedByCategory;
   }
 
-
   async getPublishedCategoryBasedToppers() {
-
     // get all candidates and their candidate programmes then add the points in candiate programmes to candiate and sort them by points and return the top 5
     // candidates must be category based
 
     // get all candidates
 
     const candidates = await this.candidateRepository.find({
-      relations: ['candidateProgrammes', 'category' , 'candidateProgrammes.programme' , 'team'],
+      relations: [
+        'candidateProgrammes',
+        'category',
+        'candidateProgrammes.programme',
+        'team',
+        'team.zone',
+      ],
     });
 
     const categories = await this.categoryService.findAll(['id', 'name']);
 
-    const pointedCandidates = candidates.map((candidate , i) => {
+    const pointedCandidates = candidates.map((candidate, i) => {
       let total = 0;
       let totalSports = 0;
       candidate.candidateProgrammes.forEach(candidateProgramme => {
-
-        if(candidateProgramme.programme?.type === Type.SINGLE && candidateProgramme.programme?.resultPublished){
-          total = total + candidateProgramme.point;
+        if (
+          candidateProgramme.programme?.type === Type.SINGLE &&
+          candidateProgramme.programme?.resultPublished
+        ) {
+          total = total + candidateProgramme.zonalpoint;
         }
       });
-
 
       return {
         ...candidate,
         individualPoint: total,
         individualSportsPoint: totalSports,
-      }
-
-
-    }
-    );
+      };
+    });
 
     // setting the category based toppers
 
     const candaidatedByCategory = categories.map(category => {
-      const candidates = pointedCandidates.filter(candidate => candidate.category.name === category.name);
+      const candidates = pointedCandidates.filter(
+        candidate => candidate.category.name === category.name,
+      );
 
-      const sortedCandidates = candidates.slice().sort((a, b) => b.individualPoint - a.individualPoint);
-      const sortedSportsCandidates = candidates.slice().sort((a, b) => b.individualSportsPoint - a.individualSportsPoint);
+      const sortedCandidates = candidates
+        .slice()
+        .sort((a, b) => b.individualPoint - a.individualPoint);
+      const sortedSportsCandidates = candidates
+        .slice()
+        .sort((a, b) => b.individualSportsPoint - a.individualSportsPoint);
 
       return {
         ...category,
-       candidates: [...sortedCandidates.slice(0, 5) , ...sortedSportsCandidates.slice(0, 5)]
-      }
-    }
-    );
+        candidates: [...sortedCandidates.slice(0, 5), ...sortedSportsCandidates.slice(0, 5)],
+      };
+    });
 
     // log first 5 candidates
     // console.log(pointedCandidates.sort((a, b) => b.total - a.total).slice(0, 5));
-    
 
     return candaidatedByCategory;
   }
@@ -877,14 +886,13 @@ export class CandidatesService {
     }
 
     try {
-
       // updating Value to candidate
       candidate.category = category_id;
       candidate.chestNO = updateCandidateInput.chestNO;
       candidate.name = updateCandidateInput.name;
       candidate.team = team_id;
 
-      return this.candidateRepository.save(candidate)
+      return this.candidateRepository.save(candidate);
     } catch (e) {
       throw new HttpException(
         'An Error have when updating data , please check the all required fields are filled ',
@@ -943,9 +951,8 @@ export class CandidatesService {
     let individualPoint = candidate.individualPoint || 0;
     let groupGeneralPoint = candidate.groupPoint || 0;
 
-      individualPoint = individualPoint + indPoint;
-      groupGeneralPoint = groupGeneralPoint + groupPoint;
- 
+    individualPoint = individualPoint + indPoint;
+    groupGeneralPoint = groupGeneralPoint + groupPoint;
 
     try {
       return this.candidateRepository.save({
@@ -964,7 +971,6 @@ export class CandidatesService {
 
   async candidateChecker(chestNo, mimeType) {
     const candidate = await this.findOneByChesNoByFields(chestNo, ['id']);
-
 
     if (!candidate) {
       throw new HttpException(

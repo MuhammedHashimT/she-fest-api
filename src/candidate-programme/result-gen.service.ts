@@ -270,6 +270,7 @@ export class ResultGenService {
     return CandidateProgramme;
   }
 
+
   async multiplePosition(
     CandidateProgramme: CandidateProgramme[],
     Positions: Position[],
@@ -309,25 +310,26 @@ export class ResultGenService {
     return CandidateProgramme;
   }
 
+
   async generatePoint(CandidateProgramme: CandidateProgramme) {
     console.log(CandidateProgramme);
 
     // giving the point of grade
     const grade: Grade = CandidateProgramme.zonalgrade;
 
-    CandidateProgramme.point = 0;
+    CandidateProgramme.zonalpoint = 0;
 
     if (grade) {
-      const grageWithPoint = await this.gradeService.findOne(grade.id, ['id', 'name', 'pointSingle', 'pointGroup', 'pointHouse'])
+      const gradeWithPoint = await this.gradeService.findOne(grade.id, ['id', 'name', 'pointSingle', 'pointGroup', 'pointHouse'])
       if (CandidateProgramme.programme.type == Type.SINGLE) {
-        CandidateProgramme.point = grade.pointSingle;
-        CandidateProgramme.point = grageWithPoint.pointSingle;
+        CandidateProgramme.zonalpoint = grade.pointSingle;
+        CandidateProgramme.zonalpoint = gradeWithPoint.pointSingle;
       } else if (CandidateProgramme.programme.type == Type.GROUP) {
-        CandidateProgramme.point = grade.pointGroup;
-        CandidateProgramme.point = grageWithPoint.pointGroup;
+        CandidateProgramme.zonalpoint = grade.pointGroup;
+        CandidateProgramme.zonalpoint = gradeWithPoint.pointGroup;
       } else if (CandidateProgramme.programme.type == Type.HOUSE) {
-        CandidateProgramme.point = grade.pointHouse;
-        CandidateProgramme.point = grageWithPoint.pointHouse;
+        CandidateProgramme.zonalpoint = grade.pointHouse;
+        CandidateProgramme.zonalpoint = gradeWithPoint.pointHouse;
       }
     }
 
@@ -336,16 +338,17 @@ export class ResultGenService {
 
     if (position) {
       if (CandidateProgramme.programme.type == Type.SINGLE) {
-        CandidateProgramme.point += position.pointSingle;
+        CandidateProgramme.zonalpoint += position.pointSingle;
       } else if (CandidateProgramme.programme.type == Type.GROUP) {
-        CandidateProgramme.point += position.pointGroup;
+        CandidateProgramme.zonalpoint += position.pointGroup;
       } else if (CandidateProgramme.programme.type == Type.HOUSE) {
-        CandidateProgramme.point += position.pointHouse;
+        CandidateProgramme.zonalpoint += position.pointHouse;
       }
     }
 
     return CandidateProgramme;
   }
+
 
   // checking as array contains duplicates
   containsDuplicates(array: number[], positionCount: number) {
@@ -367,6 +370,7 @@ export class ResultGenService {
 
     return false; // No duplicate of 1, 2, or 3 found
   }
+
 
   judgeResultCheck(
     input: AddResult[],
@@ -414,6 +418,7 @@ export class ResultGenService {
 
     return sortedCandidateProgramme;
   }
+
 
   async approveJudgeResult(programCode: string, judgeName: string) {
     // check if programme exist
@@ -478,6 +483,7 @@ export class ResultGenService {
     }
   }
 
+
   async publishResult(programCode: string) {
     // checking the programme exist
 
@@ -526,19 +532,19 @@ export class ResultGenService {
       let GCpoint = 0;
 
       if (candidateProgramme.programme.type == Type.HOUSE) {
-        Hpoint = candidateProgramme.point;
+        Hpoint = candidateProgramme.zonalpoint;
       } else if (candidateProgramme.programme.type == Type.GROUP) {
-        Gpoint = candidateProgramme.point;
-        GCpoint = candidateProgramme.point;
+        Gpoint = candidateProgramme.zonalpoint;
+        GCpoint = candidateProgramme.zonalpoint;
       } else if (candidateProgramme.programme.type == Type.SINGLE) {
-        Ipoint = candidateProgramme.point;
-        ICpoint = candidateProgramme.point;
+        Ipoint = candidateProgramme.zonalpoint;
+        ICpoint = candidateProgramme.zonalpoint;
       }
 
       if (candidateProgramme.candidate.team) {
         await this.teamService.setTeamPoint(
           candidateProgramme.candidate.team.id,
-          candidateProgramme.point,
+          candidateProgramme.zonalpoint,
           Gpoint,
           Ipoint,
           Hpoint,
@@ -556,6 +562,7 @@ export class ResultGenService {
 
     return programme;
   }
+  
 
   async publishResults(programCode: [string]) {
     let data = []
@@ -634,7 +641,12 @@ export class ResultGenService {
         const grade: Grade = await this.gradeService.findOneByName(input.grade, ['id', 'pointSingle', 'pointGroup', 'pointHouse', 'percentage']);
 
         if (grade) {
-          candidateProgramme.zonalgrade= grade;
+
+          if (input.zonal) {
+            candidateProgramme.zonalgrade= grade;
+          }else{
+            candidateProgramme.finalgrade = grade;
+          }
 
           // calculating the mark
           if (programme.type == Type.SINGLE) {
@@ -657,8 +669,12 @@ export class ResultGenService {
         const position: Position = await this.positionService.findOneByName(input.position, ['id', 'pointSingle', 'pointGroup', 'pointHouse', 'name']);
 
         if (position) {
-          candidateProgramme.zonalposition= position;
-
+          
+          if (input.zonal) {
+            candidateProgramme.zonalposition= position;
+          }else{
+            candidateProgramme.finalposition= position;
+          }
           // calculating the mark
 
           if (programme.type == Type.SINGLE) {
@@ -674,8 +690,12 @@ export class ResultGenService {
 
       }
 
+      if (input.zonal) {
+        candidateProgramme.zonalpoint = mark;
+      }else{
+        candidateProgramme.finalpoint = mark;
+      }
 
-      candidateProgramme.point = mark;
 
       // save the candidate programme
 
