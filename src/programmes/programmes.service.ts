@@ -337,13 +337,13 @@ export class ProgrammesService {
     try {
       const queryBuilder = this.programmeRepository
         .createQueryBuilder('programme')
-        .where('programme.resultEntered = true')
         .leftJoinAndSelect('programme.category', 'category')
         .leftJoinAndSelect('programme.candidateProgramme', 'candidateProgramme')
         .leftJoinAndSelect('candidateProgramme.candidate', 'candidate')
         .leftJoinAndSelect('candidate.team', 'team')
         .leftJoinAndSelect('team.zone', 'zone')
         .where('zone.name = :zone', { zone })
+        .andWhere('programme.resultEntered = true')
         .leftJoinAndSelect('category.settings', 'settings')
         .leftJoinAndSelect('candidateProgramme.zonalgrade', 'zonalgrade')
         .leftJoinAndSelect('candidateProgramme.zonalposition', 'zonalposition')
@@ -361,6 +361,16 @@ export class ProgrammesService {
         }),
       );
       const programme = await queryBuilder.getMany();
+
+      // on every programme return candidateProgrammes where zonalPoint one or more
+
+      programme.forEach(programme => {
+        programme.candidateProgramme = programme.candidateProgramme.filter(
+          candidateProgramme => candidateProgramme?.zonalpoint > 0,
+        );
+      });
+
+
       return programme;
     } catch (e) {
       throw new HttpException(
@@ -394,13 +404,13 @@ export class ProgrammesService {
     try {
       const queryBuilder = this.programmeRepository
         .createQueryBuilder('programme')
-        .where('programme.resultPublished = true')
         .leftJoinAndSelect('programme.category', 'category')
         .leftJoinAndSelect('programme.candidateProgramme', 'candidateProgramme')
         .leftJoinAndSelect('candidateProgramme.candidate', 'candidate')
         .leftJoinAndSelect('candidate.team', 'team')
         .leftJoinAndSelect('team.zone', 'zone')
         .where('zone.name = :zone', { zone })
+        .andWhere('programme.resultPublished = true')
         .leftJoinAndSelect('category.settings', 'settings')
         .leftJoinAndSelect('candidateProgramme.zonalgrade', 'zonalgrade')
         .leftJoinAndSelect('candidateProgramme.zonalposition', 'zonalposition')
@@ -419,6 +429,13 @@ export class ProgrammesService {
         }),
       );
       const programme = await queryBuilder.getMany();
+
+      programme.forEach(programme => {
+        programme.candidateProgramme = programme.candidateProgramme.filter(
+          candidateProgramme => candidateProgramme?.zonalpoint > 0,
+        );
+      });
+
       return programme;
     } catch (e) {
       throw new HttpException(
