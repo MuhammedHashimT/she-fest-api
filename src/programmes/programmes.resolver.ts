@@ -83,6 +83,15 @@ export class ProgrammesResolver {
     return this.programmesService.findByCategories(categoriesName , fields);
   }
 
+  @Query(() => [Programme], { name: 'findProgrammesByZone' })
+  findAllByZone(
+    @Args('zone', { type: () => String }) zone: string,
+    @Info() info: any
+  ) {
+    const fields = Object.keys(fieldsProjection(info));
+    return this.programmesService.findProgrammesByZone(zone , fields);
+  }
+
 
   @Mutation(() => Programme)
   @HasRoles(Roles.Controller)

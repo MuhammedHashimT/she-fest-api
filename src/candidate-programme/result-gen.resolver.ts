@@ -66,8 +66,9 @@ export class ResultGenResolver {
  async uploadResultanually(
     @Args('programmeCode') programmeCode: string,
     @Args('addManual' ,  { type: () => [AddManual] }  ) addManual: [AddManual] ,
+    @Args('zone' ) zone : string ,
   ) {
-    return this.resultGenService.uploadResultManually(programmeCode, addManual);
+    return this.resultGenService.uploadResultManually(programmeCode, addManual , zone);
   }
 
 }

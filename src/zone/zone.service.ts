@@ -32,7 +32,9 @@ export class ZoneService {
 
   findAll() {
     try{
-      return this.zoneRepository.find();
+      return this.zoneRepository.find({
+        relations: ['teams'],
+      });
     }
     catch(e){
       throw new HttpException(

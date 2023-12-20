@@ -9,7 +9,7 @@ import { PositionService } from 'src/position/position.service';
 import { Position } from 'src/position/entities/position.entity';
 import { CandidateProgrammeService } from './candidate-programme.service';
 import { ProgrammesService } from 'src/programmes/programmes.service';
-import {  Programme, Type } from 'src/programmes/entities/programme.entity';
+import { Programme, Type } from 'src/programmes/entities/programme.entity';
 import { DetailsService } from 'src/details/details.service';
 import { arrayInput } from './dto/array-input.dto';
 import { TeamsService } from 'src/teams/teams.service';
@@ -28,9 +28,7 @@ export class ResultGenService {
     private readonly DetailService: DetailsService,
     private readonly teamService: TeamsService,
     private readonly candidateService: CandidatesService,
-  ) { }
-
-
+  ) {}
 
   // upload Normal Result
 
@@ -59,7 +57,7 @@ export class ResultGenService {
     for (let index = 0; index < programme.candidateProgramme.length; index++) {
       const candidate = candidatesOfProgramme[index];
 
-      candidate.mark = input.inputs[index].mark
+      candidate.mark = input.inputs[index].mark;
     }
 
     // process the result
@@ -80,21 +78,21 @@ export class ResultGenService {
 
     for (let index = 0; index < candidatesOfProgramme.length; index++) {
       const candidate = candidatesOfProgramme[index];
-      candidate.zonalgrade= null;
+      candidate.zonalgrade = null;
     }
 
     //  Generating Grade for each candidate
-      for (let index = 0; index < candidatesOfProgramme.length; index++) {
-        const candidate = candidatesOfProgramme[index];
-        const grade: Grade = await this.generateGrade(candidate.mark, programme);
-        candidate.zonalgrade= grade;
-      }
+    for (let index = 0; index < candidatesOfProgramme.length; index++) {
+      const candidate = candidatesOfProgramme[index];
+      const grade: Grade = await this.generateGrade(candidate.mark, programme);
+      candidate.zonalgrade = grade;
+    }
     // Generating Position for each candidate
 
     // Clear the position first before generating new one
     for (let index = 0; index < candidatesOfProgramme.length; index++) {
       const candidate = candidatesOfProgramme[index];
-      candidate.zonalposition= null;
+      candidate.zonalposition = null;
     }
 
     candidatesOfProgramme = await this.generatePosition(
@@ -114,7 +112,6 @@ export class ResultGenService {
   // verify the result
 
   async verifyResult(input: AddResult[], programCode: string) {
-
     // CHANGED SOME FOR DH HOUSING ONLY
 
     // all candidates of programme
@@ -129,7 +126,6 @@ export class ResultGenService {
 
     let sortedCandidateProgramme = candidatesOfProgramme.sort(
       (a: CandidateProgramme, b: CandidateProgramme) => {
-
         // here each chest no have 4 letters , fist one is letter and other 3 are numbers , so we are taking the last 3 numbers
 
         const chestNoA = parseInt(a.candidate?.chestNO.slice(1, 4));
@@ -140,7 +136,6 @@ export class ResultGenService {
     );
 
     const sortedInput = input.sort((a: AddResult, b: AddResult) => {
-
       // here each chest no have 4 letters , fist one is letter and other 3 are numbers , so we are taking the last 3 numbers
 
       const chestNoA = parseInt(a.chestNo.slice(1, 4));
@@ -173,40 +168,41 @@ export class ResultGenService {
 
   // verify the result mannualy
 
-  async verifyResultManual(input: AddManual[], programCode: string) {
-
+  async verifyResultManual(input: AddManual[], programCode: string, zone: string) {
     // CHANGED SOME FOR DH HOUSING ONLY
 
     // all candidates of programme
     const candidatesOfProgramme: CandidateProgramme[] =
       await this.candidateProgrammeService.getCandidatesOfProgramme(programCode);
 
+    const zoneCandidatesOfProgramme: CandidateProgramme[] = candidatesOfProgramme.filter(
+      (candidateProgramme: CandidateProgramme) => {
+        return candidateProgramme.candidate?.team?.zone?.name == zone;
+      },
+    );
+
     // checking the two input ore equal
 
-    const isSameLength = candidatesOfProgramme.length === input.length;
+    const isSameLength = zoneCandidatesOfProgramme.length === input.length;
 
     // sorting data
 
-    let sortedCandidateProgramme = candidatesOfProgramme.sort(
+    let sortedCandidateProgramme = zoneCandidatesOfProgramme.sort(
       (a: CandidateProgramme, b: CandidateProgramme) => {
+        // sort by chest no which is a string
+        const chestNoA: string = a.candidate?.chestNO;
+        const chestNoB: string = b.candidate?.chestNO;
 
-        // here each chest no have 4 letters , fist one is letter and other 3 are numbers , so we are taking the last 3 numbers
-
-        const chestNoA = parseInt(a.candidate?.chestNO.slice(1, 4));
-        const chestNoB = parseInt(b.candidate?.chestNO.slice(1, 4));
-
-        return chestNoA - chestNoB;
+        return chestNoA.localeCompare(chestNoB);
       },
     );
 
     const sortedInput = input.sort((a: AddManual, b: AddManual) => {
+      // sort by chest no which is a string
+      const chestNoA: string = a.chestNo;
+      const chestNoB: string = b.chestNo;
 
-      // here each chest no have 4 letters , fist one is letter and other 3 are numbers , so we are taking the last 3 numbers
-
-      const chestNoA = parseInt(a.chestNo.slice(1, 4));
-      const chestNoB = parseInt(b.chestNo.slice(1, 4));
-
-      return chestNoA - chestNoB;
+      return chestNoA.localeCompare(chestNoB);
     });
 
     if (!isSameLength) {
@@ -270,7 +266,6 @@ export class ResultGenService {
     return CandidateProgramme;
   }
 
-
   async multiplePosition(
     CandidateProgramme: CandidateProgramme[],
     Positions: Position[],
@@ -303,13 +298,12 @@ export class ResultGenService {
       const position: Position = Positions[changed[index] - 1];
 
       if (position) {
-        candidateProgramme.zonalposition= position;
+        candidateProgramme.zonalposition = position;
       }
     }
 
     return CandidateProgramme;
   }
-
 
   async generatePoint(CandidateProgramme: CandidateProgramme) {
     console.log(CandidateProgramme);
@@ -320,7 +314,13 @@ export class ResultGenService {
     CandidateProgramme.zonalpoint = 0;
 
     if (grade) {
-      const gradeWithPoint = await this.gradeService.findOne(grade.id, ['id', 'name', 'pointSingle', 'pointGroup', 'pointHouse'])
+      const gradeWithPoint = await this.gradeService.findOne(grade.id, [
+        'id',
+        'name',
+        'pointSingle',
+        'pointGroup',
+        'pointHouse',
+      ]);
       if (CandidateProgramme.programme.type == Type.SINGLE) {
         CandidateProgramme.zonalpoint = grade.pointSingle;
         CandidateProgramme.zonalpoint = gradeWithPoint.pointSingle;
@@ -349,7 +349,6 @@ export class ResultGenService {
     return CandidateProgramme;
   }
 
-
   // checking as array contains duplicates
   containsDuplicates(array: number[], positionCount: number) {
     const allowedNumbers = [];
@@ -371,7 +370,6 @@ export class ResultGenService {
     return false; // No duplicate of 1, 2, or 3 found
   }
 
-
   judgeResultCheck(
     input: AddResult[],
     candidateProgrammes: CandidateProgramme[],
@@ -379,7 +377,6 @@ export class ResultGenService {
   ) {
     // SOME FOR DH HOUSING ONLY
     const sortedInput = input.sort((a: AddResult, b: AddResult) => {
-
       // here each chest no have 4 letters , fist one is letter and other 3 are numbers , so we are taking the last 3 numbers
       const aChestNo = parseInt(a.chestNo.slice(1, 4));
       const bChestNo = parseInt(b.chestNo.slice(1, 4));
@@ -389,7 +386,6 @@ export class ResultGenService {
 
     const sortedCandidateProgramme = candidateProgrammes.sort(
       (a: CandidateProgramme, b: CandidateProgramme) => {
-
         // here each chest no have 4 letters , fist one is letter and other 3 are numbers , so we are taking the last 3 numbers
 
         const aChestNo = parseInt(a.candidate.chestNO.slice(1, 4));
@@ -418,7 +414,6 @@ export class ResultGenService {
 
     return sortedCandidateProgramme;
   }
-
 
   async approveJudgeResult(programCode: string, judgeName: string) {
     // check if programme exist
@@ -482,7 +477,6 @@ export class ResultGenService {
       throw new HttpException('Error on updating result', HttpStatus.BAD_REQUEST);
     }
   }
-
 
   async publishResult(programCode: string) {
     // checking the programme exist
@@ -563,28 +557,30 @@ export class ResultGenService {
     return programme;
   }
 
-
   async publishResults(programCode: [string]) {
-    let data = []
+    let data = [];
     for (let index = 0; index < programCode.length; index++) {
       const program = programCode[index];
       let programme = await this.publishResult(program);
-      data.push(programme)
+      data.push(programme);
     }
 
     return data;
   }
 
   // upload result mannualy by controller
-  async uploadResultManually(programCode: string, input: AddManual[]) {
-
+  async uploadResultManually(programCode: string, input: AddManual[], zone: string) {
     // check if programme exist
 
     const programme: Programme = await this.programmeService.findOneByCode(programCode);
 
     // all candidates of programme
 
-    let candidatesOfProgramme: CandidateProgramme[] = programme.candidateProgramme;
+    let candidatesOfProgramme: CandidateProgramme[] = programme.candidateProgramme.filter(
+      (candidateProgramme: CandidateProgramme) => {
+        return candidateProgramme.candidate?.team?.zone?.name == zone;
+      },
+    );
 
     if (!programme) {
       throw new HttpException('Programme does not exist', HttpStatus.BAD_REQUEST);
@@ -598,14 +594,13 @@ export class ResultGenService {
 
     // verify the result
 
-    // await this.verifyResultManual(input, programme.programCode);
+    await this.verifyResultManual(input, programme.programCode, zone);
 
     // giving grade to each candidate
 
     // sort the input
 
     const sortedInput = input.sort((a: AddManual, b: AddManual) => {
-
       // here each chest no have 4 letters , fist one is letter and other 3 are numbers , so we are taking the last 3 numbers
 
       const chestNoA = parseInt(a.chestNo.slice(1, 4));
@@ -618,7 +613,6 @@ export class ResultGenService {
 
     const sortedCandidateProgramme = candidatesOfProgramme.sort(
       (a: CandidateProgramme, b: CandidateProgramme) => {
-
         // here each chest no have 4 letters , fist one is letter and other 3 are numbers , so we are taking the last 3 numbers
 
         const chestNoA = parseInt(a.candidate?.chestNO.slice(1, 4));
@@ -635,79 +629,78 @@ export class ResultGenService {
       const candidateProgramme: CandidateProgramme = sortedCandidateProgramme[index];
 
       let mark = 0;
-      candidateProgramme.zonalgrade= null;
+      candidateProgramme.zonalgrade = null;
       if (input.grade) {
-        const grade: Grade = await this.gradeService.findOneByName(input.grade, ['id', 'pointSingle', 'pointGroup', 'pointHouse', 'percentage']);
+        const grade: Grade = await this.gradeService.findOneByName(input.grade, [
+          'id',
+          'pointSingle',
+          'pointGroup',
+          'pointHouse',
+          'percentage',
+        ]);
 
         if (grade) {
-
-          if (input.zonal) {
-            candidateProgramme.zonalgrade= grade;
-          }else{
+          if (zone) {
+            candidateProgramme.zonalgrade = grade;
+          } else {
             candidateProgramme.finalgrade = grade;
           }
 
           // calculating the mark
           if (programme.type == Type.SINGLE) {
-            mark = grade.pointSingle
-          }
-          else if (programme.type == Type.GROUP) {
-            mark = grade.pointGroup
-          }
-          else if (programme.type == Type.HOUSE) {
-            mark = grade.pointHouse
+            mark = grade.pointSingle;
+          } else if (programme.type == Type.GROUP) {
+            mark = grade.pointGroup;
+          } else if (programme.type == Type.HOUSE) {
+            mark = grade.pointHouse;
           }
         }
-
-
       }
 
-      candidateProgramme.zonalposition= null;
+      candidateProgramme.zonalposition = null;
 
       if (input.position) {
-        const position: Position = await this.positionService.findOneByName(input.position, ['id', 'pointSingle', 'pointGroup', 'pointHouse', 'name']);
+        const position: Position = await this.positionService.findOneByName(input.position, [
+          'id',
+          'pointSingle',
+          'pointGroup',
+          'pointHouse',
+          'name',
+        ]);
 
         if (position) {
-          
-          if (input.zonal) {
-            candidateProgramme.zonalposition= position;
-          }else{
-            candidateProgramme.finalposition= position;
+          if (zone) {
+            candidateProgramme.zonalposition = position;
+          } else {
+            candidateProgramme.finalposition = position;
           }
           // calculating the mark
 
           if (programme.type == Type.SINGLE) {
-            mark += position.pointSingle
-          }
-          else if (programme.type == Type.GROUP) {
-            mark += position.pointGroup
-          }
-          else if (programme.type == Type.HOUSE) {
-            mark += position.pointHouse
+            mark += position.pointSingle;
+          } else if (programme.type == Type.GROUP) {
+            mark += position.pointGroup;
+          } else if (programme.type == Type.HOUSE) {
+            mark += position.pointHouse;
           }
         }
-
       }
 
-      if (input.zonal) {
+      if (zone) {
         candidateProgramme.zonalpoint = mark;
-      }else{
+      } else {
         candidateProgramme.finalpoint = mark;
       }
-
 
       // save the candidate programme
 
       await this.candidateProgrammeRepository.save(candidateProgramme);
-
     }
 
     // make the programme result entered
 
-    const updatedResult = await this.programmeService.enterResult(programCode);
+    await this.programmeService.enterResult(programCode);
 
     return programme;
-
   }
-
 }
