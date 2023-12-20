@@ -379,6 +379,8 @@ export class CandidateProgrammeService {
       'candidate.category',
       'programme.category',
       'candidatesOfGroup',
+      'zonalposition',
+      'zonalgrade',
     ];
 
     // validating fields
@@ -391,8 +393,8 @@ export class CandidateProgrammeService {
         .leftJoinAndSelect('candidateProgramme.programme', 'programme')
         .leftJoinAndSelect('candidateProgramme.candidate', 'candidate')
         .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup')
-        // .leftJoinAndSelect('CandidateProgramme.zonalgrade', 'grade')
-        // .leftJoinAndSelect('candidateProgramme.position', 'position')
+        .leftJoinAndSelect('CandidateProgramme.zonalgrade', 'zonalgrade')
+        .leftJoinAndSelect('candidateProgramme.zonalposition', 'zonalposition')
         .leftJoinAndSelect('candidate.team', 'team')
         .leftJoinAndSelect('candidate.category', 'category')
         .leftJoinAndSelect('programme.category', 'programmeCategory')
@@ -425,8 +427,8 @@ export class CandidateProgrammeService {
       relations: [
         'programme',
         'candidate',
-        // 'grade',
-        // 'position',
+        'zonalposition',
+        'zonalgrade',
         'candidate.team',
         'candidate.category',
         'programme.category',
@@ -444,6 +446,8 @@ export class CandidateProgrammeService {
       .leftJoinAndSelect('c.programme', 'programme')
       .leftJoinAndSelect('candidate.category', 'category')
       .leftJoinAndSelect('candidate.team', 'team')
+      .leftJoinAndSelect('CandidateProgramme.zonalgrade', 'zonalgrade')
+      .leftJoinAndSelect('candidateProgramme.zonalposition', 'zonalposition')
       .leftJoinAndSelect('programme.category', 'programmeCategory')
       .leftJoinAndSelect('category.settings', 'settings')
       .leftJoinAndSelect('candidate.candidateProgrammes', 'cp');
@@ -634,7 +638,7 @@ export class CandidateProgrammeService {
     // checking is The candidateProgramme exist
     const candidateProgramme: CandidateProgramme = await this.candidateProgrammeRepository.findOne({
       where: { id },
-      relations: ['programme', 'programme.category' , 'programme.category.settings', 'candidate', 'candidate.team'],
+      relations: ['programme', 'programme.category' , 'programme.category.settings', 'candidate', 'candidate.team' , 'candidate.team.zone'],
     });
 
     const category = candidateProgramme.programme?.category;

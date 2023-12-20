@@ -14,8 +14,10 @@ import { SearchCandidate } from './dto/search-candidate';
 
 @Resolver(() => Candidate)
 export class CandidatesResolver {
-  constructor(private readonly candidatesService: CandidatesService,
-    private readonly credentialsService: CredentialsService) { }
+  constructor(
+    private readonly candidatesService: CandidatesService,
+    private readonly credentialsService: CredentialsService,
+  ) {}
 
   // @UsePipes(CandidatePipe)
   @Mutation(() => Candidate)
@@ -40,20 +42,14 @@ export class CandidatesResolver {
   }
 
   @Query(() => [Candidate], { name: 'candidates' })
-  async findAll(
-    @Info() info: any,
-    @Args('api_key') api_key: string,
-  ) {
+  async findAll(@Info() info: any, @Args('api_key') api_key: string) {
     await this.credentialsService.ValidateApiKey(api_key);
     const fields = Object.keys(fieldsProjection(info));
     return this.candidatesService.findAll(fields);
   }
 
   @Query(() => Candidate, { name: 'candidateByChestNo' })
-  async findCandidateByChestNo(
-    @Args('chestNo') chestNo: string,
-    @Args('api_key') api_key: string
-  ) {
+  async findCandidateByChestNo(@Args('chestNo') chestNo: string, @Args('api_key') api_key: string) {
     await this.credentialsService.ValidateApiKey(api_key);
     return this.candidatesService.findOneByChestNo(chestNo);
   }
@@ -71,41 +67,47 @@ export class CandidatesResolver {
   findAllByCategoriesAndTeam(
     @Args('categoriesName', { type: () => [String] }) categoriesName: string[],
     @Args('teamName', { type: () => String }) teamName: string,
-    @Info() info: any
+    @Info() info: any,
   ) {
     const fields = Object.keys(fieldsProjection(info));
     return this.candidatesService.findByCategoryNamesAndTeamName(categoriesName, teamName, fields);
   }
 
   // search candidates by name or chestNo
-  @Query(() => 
-  // total count and candidates seperately
-  SearchCandidate
-  
-  , { name: 'searchCandidates' })
+  @Query(
+    () =>
+      // total count and candidates seperately
+      SearchCandidate,
+
+    { name: 'searchCandidates' },
+  )
   searchCandidates(
     @Args('name', { type: () => String }) name: string,
     @Args('chestNo', { type: () => String }) chestNo: string,
     @Args('limit', { type: () => Int, nullable: true }) limit: number,
     @Args('teamName', { type: () => String, nullable: true }) teamName: string,
-    @Info() info: any
+    @Info() info: any,
   ) {
     const fields = Object.keys(fieldsProjection(info));
     return this.candidatesService.findByNameOrChestNo(name, chestNo, limit || 10, teamName);
   }
 
   @Query(() => [Category], { name: 'getCategoryBasedToppers' })
-  getCategoryBasedToppers(){
+  getCategoryBasedToppers() {
     return this.candidatesService.getCategoryBasedToppers();
   }
 
   @Query(() => [Category], { name: 'getPublishedCategoryBasedToppers' })
-  getPublishedCategoryBasedToppers(){
+  getPublishedCategoryBasedToppers() {
     return this.candidatesService.getPublishedCategoryBasedToppers();
   }
 
   @Query(() => Candidate, { name: 'candidate' })
-  async findOne(@Args('id', { type: () => Int }) id: number, @Args('api_key') api_key: string, @Info() info: any) {
+  async findOne(
+    @Args('id', { type: () => Int }) id: number,
+    @Args('api_key') api_key: string,
+    @Info() info: any,
+  ) {
     await this.credentialsService.ValidateApiKey(api_key);
     const fields = Object.keys(fieldsProjection(info));
     return this.candidatesService.findOne(id, fields);
@@ -117,7 +119,6 @@ export class CandidatesResolver {
     const fields = Object.keys(fieldsProjection(info));
     // return this.candidatesService.findOverallToppers(fields);
   }
-
 
   @Mutation(() => Candidate)
   @HasRoles(Roles.Controller)

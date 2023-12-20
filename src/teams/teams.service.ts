@@ -143,6 +143,7 @@ export class TeamsService {
       'candidates.candidateProgrammes.programme',
       'credentials',
       'credentials.categories',
+      'zone'
     ];
 
     // validating fields
@@ -155,6 +156,7 @@ export class TeamsService {
         .createQueryBuilder('team')
         .where('team.id = :id', { id })
         .leftJoinAndSelect('team.candidates', 'candidates')
+        .leftJoinAndSelect('team.zone', 'zone')
         .leftJoinAndSelect('candidates.candidateProgrammes', 'candidateProgrammes')
         .leftJoinAndSelect('candidates.category', 'category')
         .leftJoinAndSelect('candidateProgrammes.programme', 'programme')

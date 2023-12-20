@@ -31,7 +31,11 @@ export class CandidateProgramme {
 
   @Field(() => Int, { nullable: true })
   @Column({ nullable: true })
-  point: number;
+  zonalpoint: number;
+
+  @Field(() => Int, { nullable: true })
+  @Column({ nullable: true })
+  finalpoint: number;
 
   @Field({ nullable: true })
   @Column({ nullable: true })

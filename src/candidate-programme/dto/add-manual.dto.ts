@@ -18,4 +18,7 @@ export class AddManual {
     // position: string
     @Field({ nullable: true })
     position: string
+
+    @Field()
+    zonal:boolean;
 }
