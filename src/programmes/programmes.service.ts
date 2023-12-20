@@ -227,10 +227,10 @@ export class ProgrammesService {
         .leftJoinAndSelect('programme.candidateProgramme', 'candidateProgramme')
         .leftJoinAndSelect('candidateProgramme.candidate', 'candidate')
         .leftJoinAndSelect('candidate.team', 'team')
+        .leftJoinAndSelect('team.zone', 'zone')
         .leftJoinAndSelect('category.settings', 'settings')
         .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup')
-          // .leftJoinAndSelect('CandidateProgramme.zonalgrade', 'grade')
-          // .leftJoinAndSelect('candidateProgramme.position', 'position')
+          .leftJoinAndSelect('CandidateProgramme.zonalgrade', 'grade')
         .orderBy('programme.id', 'ASC');
 
       queryBuilder.select(
@@ -258,7 +258,6 @@ export class ProgrammesService {
   }
 
   // find the result entered programmes
-
   async findResultEnteredProgrammes(fields: string[]) {
     const allowedRelations = [
       'category',
@@ -314,8 +313,6 @@ export class ProgrammesService {
   }
 
   // result published programmes
-
-
   async findResultPublishedProgrammes(fields: string[]) {
     const allowedRelations = [
       'category',
@@ -943,5 +940,7 @@ export class ProgrammesService {
       );
     }
   }
+
+
 
 }

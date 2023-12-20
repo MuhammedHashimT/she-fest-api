@@ -16,6 +16,8 @@ import { fieldsIdChecker, fieldsValidator } from 'src/utils/util';
 import {  Type } from 'src/programmes/entities/programme.entity';
 import { CategorySettings } from 'src/category-settings/entities/category-setting.entity';
 import { CategorySettingsService } from 'src/category-settings/category-settings.service';
+import { ProgrammesService } from 'src/programmes/programmes.service';
+import { CandidateProgramme } from 'src/candidate-programme/entities/candidate-programme.entity';
 // import { drive } from 'src/utils/googleApi.auth';
 
 @Injectable()
@@ -27,6 +29,7 @@ export class CandidatesService {
     private candidateProgrammeService: CandidateProgrammeService,
     private credentialService: CredentialsService,
     private categorySettingsService: CategorySettingsService,
+    private programmeService: ProgrammesService,
   ) { }
 
   //  To create many candidates at a time , Normally using on Excel file upload
@@ -393,7 +396,7 @@ export class CandidatesService {
         where: {
           chestNO,
         },
-        relations: ['category', 'team', 'candidateProgrammes' , 'cgp'],
+        // relations: ['category', 'team', 'candidateProgrammes' ],
       });
 
       if (!candidate) {
@@ -403,23 +406,50 @@ export class CandidatesService {
         );
       }
 
-      // change what in cgp to candidateProgrammes with what already in candidateProgrammes
-      const cgp = candidate.cgp || [];
+      // // change what in cgp to candidateProgrammes with what already in candidateProgrammes
+      // const cgp = candidate.cgp || [];
 
-      const candidateProgrammes = candidate.candidateProgrammes || [];
+      // const candidateProgrammes = candidate.candidateProgrammes || [];
 
-      // if cgp.programme is not already in candidateProgrammes.programme then push cgp to 
-      // candidateProgrammes  
+      // // if cgp.programme is not already in candidateProgrammes.programme then push cgp to 
+      // // candidateProgrammes  
 
-      cgp.forEach(cgp => {
-        const isAlready = candidateProgrammes.some(candidateProgramme => candidateProgramme.programme.id === cgp.programme.id);
+      // cgp.forEach(async cgp => {
+      //   const isAlready = candidateProgrammes.some(candidateProgramme => candidateProgramme.programme.id === cgp.programme.id);
 
-        if (!isAlready) {
-          candidateProgrammes.push(cgp);
-        }
-      });
+      //   // if not already exist then push to candidateProgrammes with the candidateProgramme of that cgp to get the position and grade and the candidate should be the candidate of that cgp
 
-      candidate.candidateProgrammes = candidateProgrammes;
+      //   if (!isAlready) {
+
+      //     const program = await this.programmeService.findOneByCode(cgp.programme.programCode);
+
+      //     if(!program){
+      //       throw new HttpException(
+      //         `Cant find programme with code ${cgp.programme.programCode} `,
+      //         HttpStatus.BAD_REQUEST,
+      //       );
+      //     }
+
+      //     const candidateProgramme : CandidateProgramme  = program.candidateProgramme.find(candidateProgramme => candidateProgramme.candidatesOfGroup.some(candidateOfGroup => candidateOfGroup.id === candidate.id));
+
+      //     if(!candidateProgramme){
+      //       throw new HttpException(
+      //         `Cant find candidate programme with candidate id ${candidate.id} `,
+      //         HttpStatus.BAD_REQUEST,
+      //       );
+      //     }
+
+      //     candidateProgrammes.push({
+      //       ...candidateProgramme,
+      //       candidate: candidate,
+      //     });
+      //   }
+
+
+
+      // });
+
+      // candidate.candidateProgrammes = candidateProgrammes;
 
       return candidate;
     } catch (e) {
@@ -428,12 +458,14 @@ export class CandidatesService {
   }
 
   async findOneByChestNoWithoutError(chestNO: string) {
+    console.log(chestNO);
+    
     try {
       const candidate = await this.candidateRepository.findOne({
         where: {
           chestNO,
         },
-        relations: ['category', 'team', 'candidateProgrammes'],
+        // relations: ['category', 'team', 'candidateProgrammes'],
       });
 
       if (!candidate) {
@@ -980,4 +1012,5 @@ export class CandidatesService {
 
     return candidate;
   }
+    
 }
