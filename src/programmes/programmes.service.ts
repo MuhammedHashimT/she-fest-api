@@ -20,7 +20,7 @@ export class ProgrammesService {
     private categoryService: CategoryService,
     private detailsService: DetailsService,
     private readonly CredentialService: CredentialsService,
-  ) { }
+  ) {}
 
   //  To create many Programmes at a time , usually using on Excel file upload
 
@@ -58,7 +58,6 @@ export class ProgrammesService {
       // authenticating the user have permission to update the category
 
       this.CredentialService.checkPermissionOnCategories(user, category_id.name);
-
 
       // checking is programmeCode already exist
       const Programme = await this.programmeRepository.findOne({
@@ -175,8 +174,6 @@ export class ProgrammesService {
     // authenticating the user have permission to update the category
 
     this.CredentialService.checkPermissionOnCategories(user, category_id.name);
-
-
 
     try {
       // creating a instance of Programme
@@ -317,11 +314,124 @@ export class ProgrammesService {
     }
   }
 
+  // find the result entered programmes by zone
+  async findResultEnteredProgrammesByZone(zone: string, fields: string[]) {
+    const allowedRelations = [
+      'category',
+      'candidateProgramme',
+      'candidateProgramme.candidate',
+      'candidateProgramme.candidate.team',
+      'category.settings',
+      'candidateProgramme.candidatesOfGroup',
+      'candidateProgramme.candidate.team.zone',
+      'candidateProgramme.zonalgrade',
+      'candidateProgramme.zonalposition',
+    ];
 
+    // validating fields
+    fields = fieldsValidator(fields, allowedRelations);
+
+    // checking if fields contains id
+    fields = fieldsIdChecker(fields);
+
+    try {
+      const queryBuilder = this.programmeRepository
+        .createQueryBuilder('programme')
+        .where('programme.resultEntered = true')
+        .leftJoinAndSelect('programme.category', 'category')
+        .leftJoinAndSelect('programme.candidateProgramme', 'candidateProgramme')
+        .leftJoinAndSelect('candidateProgramme.candidate', 'candidate')
+        .leftJoinAndSelect('candidate.team', 'team')
+        .leftJoinAndSelect('team.zone', 'zone')
+        .where('zone.name = :zone', { zone })
+        .leftJoinAndSelect('category.settings', 'settings')
+        .leftJoinAndSelect('candidateProgramme.zonalgrade', 'zonalgrade')
+        .leftJoinAndSelect('candidateProgramme.zonalposition', 'zonalposition')
+        .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup');
+
+      queryBuilder.select(
+        fields.map(column => {
+          const splitted = column.split('.');
+
+          if (splitted.length > 1) {
+            return `${splitted[splitted.length - 2]}.${splitted[splitted.length - 1]}`;
+          } else {
+            return `programme.${column}`;
+          }
+        }),
+      );
+      const programme = await queryBuilder.getMany();
+      return programme;
+    } catch (e) {
+      throw new HttpException(
+        'An Error have when finding programme ',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        { cause: e },
+      );
+    }
+  }
+
+  // find the result published programmes by zone
+  async findResultPublishedProgrammesByZone(zone: string, fields: string[]) {
+    const allowedRelations = [
+      'category',
+      'candidateProgramme',
+      'candidateProgramme.candidate',
+      'candidateProgramme.candidate.team',
+      'category.settings',
+      'candidateProgramme.candidatesOfGroup',
+      'candidateProgramme.candidate.team.zone',
+      'candidateProgramme.zonalgrade',
+      'candidateProgramme.zonalposition',
+    ];
+
+    // validating fields
+    fields = fieldsValidator(fields, allowedRelations);
+
+    // checking if fields contains id
+    fields = fieldsIdChecker(fields);
+
+    try {
+      const queryBuilder = this.programmeRepository
+        .createQueryBuilder('programme')
+        .where('programme.resultPublished = true')
+        .leftJoinAndSelect('programme.category', 'category')
+        .leftJoinAndSelect('programme.candidateProgramme', 'candidateProgramme')
+        .leftJoinAndSelect('candidateProgramme.candidate', 'candidate')
+        .leftJoinAndSelect('candidate.team', 'team')
+        .leftJoinAndSelect('team.zone', 'zone')
+        .where('zone.name = :zone', { zone })
+        .leftJoinAndSelect('category.settings', 'settings')
+        .leftJoinAndSelect('candidateProgramme.zonalgrade', 'zonalgrade')
+        .leftJoinAndSelect('candidateProgramme.zonalposition', 'zonalposition')
+        .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup');
+      // .leftJoinAndSelect('candidateProgramme.position', 'position');
+
+      queryBuilder.select(
+        fields.map(column => {
+          const splitted = column.split('.');
+
+          if (splitted.length > 1) {
+            return `${splitted[splitted.length - 2]}.${splitted[splitted.length - 1]}`;
+          } else {
+            return `programme.${column}`;
+          }
+        }),
+      );
+      const programme = await queryBuilder.getMany();
+      return programme;
+    } catch (e) {
+      throw new HttpException(
+        'An Error have when finding programme ',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        { cause: e },
+      );
+    }
+  }
 
   // find the result entered programmes
   async findResultEnteredProgrammes(fields: string[]) {
-     const allowedRelations = [
+    const allowedRelations = [
       'category',
       'candidateProgramme',
       'candidateProgramme.candidate',
@@ -351,7 +461,7 @@ export class ProgrammesService {
         .leftJoinAndSelect('category.settings', 'settings')
         .leftJoinAndSelect('candidateProgramme.zonalgrade', 'zonalgrade')
         .leftJoinAndSelect('candidateProgramme.zonalposition', 'zonalposition')
-        .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup')
+        .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup');
 
       queryBuilder.select(
         fields.map(column => {
@@ -373,7 +483,6 @@ export class ProgrammesService {
         { cause: e },
       );
     }
-
   }
 
   // result published programmes
@@ -408,8 +517,8 @@ export class ProgrammesService {
         .leftJoinAndSelect('category.settings', 'settings')
         .leftJoinAndSelect('candidateProgramme.zonalgrade', 'zonalgrade')
         .leftJoinAndSelect('candidateProgramme.zonalposition', 'zonalposition')
-        .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup')
-        // .leftJoinAndSelect('candidateProgramme.position', 'position');
+        .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup');
+      // .leftJoinAndSelect('candidateProgramme.position', 'position');
 
       queryBuilder.select(
         fields.map(column => {
@@ -432,7 +541,6 @@ export class ProgrammesService {
       );
     }
   }
-
 
   async findOne(id: number, fields: string[]) {
     const allowedRelations = [
@@ -464,7 +572,7 @@ export class ProgrammesService {
         .leftJoinAndSelect('category.settings', 'settings')
         .leftJoinAndSelect('candidateProgramme.zonalgrade', 'zonalgrade')
         .leftJoinAndSelect('candidateProgramme.zonalposition', 'zonalposition')
-        .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup')
+        .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup');
 
       queryBuilder.select(
         fields.map(column => {
@@ -553,24 +661,24 @@ export class ProgrammesService {
   // find the programme by programme code know is the programme is there
 
   async findOneByCodeForCheck(programCode: string) {
-
     try {
-      const data = await this.programmeRepository.createQueryBuilder('programme')
+      const data = await this.programmeRepository
+        .createQueryBuilder('programme')
         .where('programme.programCode = :programCode', { programCode })
         .select('programme.id')
         .getOne();
 
-
       return data;
     } catch (e) {
-      throw new HttpException('An Error have when finding programme ', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        'An Error have when finding programme ',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
   async findByCategories(categories: string[], fields: string[]) {
-    const allowedRelations = [
-      'category',
-    ];
+    const allowedRelations = ['category'];
 
     // validating fields
     fields = fieldsValidator(fields, allowedRelations);
@@ -581,7 +689,7 @@ export class ProgrammesService {
       const queryBuilder = this.programmeRepository
         .createQueryBuilder('programme')
         .leftJoinAndSelect('programme.category', 'category')
-        .where('category.name IN (:...categories)', { categories })
+        .where('category.name IN (:...categories)', { categories });
 
       queryBuilder.select(
         fields.map(column => {
@@ -605,9 +713,7 @@ export class ProgrammesService {
     }
   }
 
-
   async update(id: number, updateProgrammeInput: UpdateProgrammeInput, user: Credential) {
-
     // checking is programme exist
 
     const programme = await this.programmeRepository.findOneBy({ id });
@@ -631,8 +737,6 @@ export class ProgrammesService {
 
     this.CredentialService.checkPermissionOnCategories(user, category_id.name);
 
-
-
     try {
       // creating a instance of Programme
 
@@ -648,7 +752,7 @@ export class ProgrammesService {
       programme.groupCount = updateProgrammeInput.groupCount;
       programme.conceptNote = updateProgrammeInput.conceptNote;
 
-      return this.programmeRepository.save(programme)
+      return this.programmeRepository.save(programme);
     } catch {
       throw new HttpException(
         'An Error have when updating programme , please check the all required fields are filled ',
@@ -667,7 +771,6 @@ export class ProgrammesService {
     // authenticating the user have permission to remove the category
 
     console.log(programme);
-
 
     this.CredentialService.checkPermissionOnCategories(user, programme.category.name);
 
@@ -690,10 +793,9 @@ export class ProgrammesService {
       programme: Programme;
     }[] = [];
 
-    const UploadedProgrammes: Programme[] = []
+    const UploadedProgrammes: Programme[] = [];
 
     console.log(scheduleData);
-
 
     for (let index = 0; index < scheduleData.inputs.length; index++) {
       const data: CreateSchedule = scheduleData.inputs[index];
@@ -739,11 +841,9 @@ export class ProgrammesService {
         code: code,
         date: date,
         venue: venue,
-        programme: programme
-      })
+        programme: programme,
+      });
     }
-
-
 
     try {
       if (allData.length !== scheduleData.inputs.length) {
@@ -763,16 +863,13 @@ export class ProgrammesService {
         programme.date = date;
         programme.venue = venue;
 
-        console.log("pushed");
+        console.log('pushed');
         const upload = await this.programmeRepository.save(programme);
 
-        UploadedProgrammes.push(upload)
-
-
+        UploadedProgrammes.push(upload);
       }
 
       return UploadedProgrammes;
-
     } catch (e) {
       throw new HttpException(
         'An Error have when updating programme ',
@@ -937,7 +1034,7 @@ export class ProgrammesService {
 
   async removePublishedResult(programCode: string) {
     // checking the code is correct
-    const programme: Programme = await this.findOneByCodeForCheck(programCode,);
+    const programme: Programme = await this.findOneByCodeForCheck(programCode);
 
     if (!programme) {
       throw new HttpException(
@@ -1015,7 +1112,4 @@ export class ProgrammesService {
       );
     }
   }
-
-
-
 }
