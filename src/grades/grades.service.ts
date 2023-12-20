@@ -25,9 +25,7 @@ export class GradesService {
 
   async findAll(fields: string[]) {
     const allowedRelations = [
-      'candidateProgramme',
-      'candidateProgramme.candidate',
-      'candidateProgramme.programme',
+      'zonalcandidateProgramme',
     ];
 
     // validating fields
@@ -38,9 +36,9 @@ export class GradesService {
     try {
       const queryBuilder = this.gradeRepository
         .createQueryBuilder('grade')
-        .leftJoinAndSelect('grade.candidateProgramme', 'candidateProgramme')
-        .leftJoinAndSelect('candidateProgramme.candidate', 'candidate')
-        .leftJoinAndSelect('candidateProgramme.programme', 'programme');
+        .leftJoinAndSelect('grade.zonalcandidateProgramme', 'zonalcandidateProgramme')
+        .leftJoinAndSelect('zonalcandidateProgramme.candidate', 'candidate')
+        .leftJoinAndSelect('zonalcandidateProgramme.programme', 'programme');
 
       queryBuilder.select(
         fields.map(column => {
@@ -66,9 +64,9 @@ export class GradesService {
 
   async findOne(id: number, fields: string[]) {
     const allowedRelations = [
-      'candidateProgramme',
-      'candidateProgramme.candidate',
-      'candidateProgramme.programme',
+      'zonalcandidateProgramme',
+      'zonalcandidateProgramme.candidate',
+      'zonalcandidateProgramme.programme',
     ];
 
     // validating fields
@@ -80,9 +78,9 @@ export class GradesService {
       const queryBuilder = this.gradeRepository
         .createQueryBuilder('grade')
         .where('grade.id = :id', { id })
-        .leftJoinAndSelect('grade.candidateProgramme', 'candidateProgramme')
-        .leftJoinAndSelect('candidateProgramme.candidate', 'candidate')
-        .leftJoinAndSelect('candidateProgramme.programme', 'programme');
+        .leftJoinAndSelect('grade.zonalcandidateProgramme', 'zonalcandidateProgramme')
+        .leftJoinAndSelect('zonalcandidateProgramme.candidate', 'candidate')
+        .leftJoinAndSelect('zonalcandidateProgramme.programme', 'programme');
 
       queryBuilder.select(
         fields.map(column => {
@@ -109,9 +107,9 @@ export class GradesService {
 
   async findOneByName(name: string, fields: string[]) {
     const allowedRelations = [
-      'candidateProgramme',
-      'candidateProgramme.candidate',
-      'candidateProgramme.programme',
+      'zonalcandidateProgramme',
+      'zonalcandidateProgramme.candidate',
+      'zonalcandidateProgramme.programme',
     ];
 
     // validating fields
@@ -123,9 +121,9 @@ export class GradesService {
       const queryBuilder = this.gradeRepository
         .createQueryBuilder('grade')
         .where('grade.name = :name', { name })
-        .leftJoinAndSelect('grade.candidateProgramme', 'candidateProgramme')
-        .leftJoinAndSelect('candidateProgramme.candidate', 'candidate')
-        .leftJoinAndSelect('candidateProgramme.programme', 'programme');
+        .leftJoinAndSelect('grade.zonalcandidateProgramme', 'zonalcandidateProgramme')
+        .leftJoinAndSelect('zonalcandidateProgramme.candidate', 'candidate')
+        .leftJoinAndSelect('zonalcandidateProgramme.programme', 'programme');
 
       queryBuilder.select(
         fields.map(column => {

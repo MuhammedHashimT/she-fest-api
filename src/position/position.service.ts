@@ -25,9 +25,9 @@ export class PositionService {
 
   async findAll(fields: string[]) {
     const allowedRelations = [
-      'candidateProgramme',
-      'candidateProgramme.candidate',
-      'candidateProgramme.programme',
+      'zonalcandidateProgramme',
+      'zonalcandidateProgramme.candidate',
+      'zonalcandidateProgramme.programme',
     ];
 
     // validating fields
@@ -38,9 +38,9 @@ export class PositionService {
     try {
       const queryBuilder = this.positionRepository
         .createQueryBuilder('position')
-        .leftJoinAndSelect('position.candidateProgramme', 'candidateProgramme')
-        .leftJoinAndSelect('candidateProgramme.candidate', 'candidate')
-        .leftJoinAndSelect('candidateProgramme.programme', 'programme');
+        .leftJoinAndSelect('position.zonalcandidateProgramme', 'zonalcandidateProgramme')
+        .leftJoinAndSelect('zonalcandidateProgramme.candidate', 'candidate')
+        .leftJoinAndSelect('zonalcandidateProgramme.programme', 'programme');
 
       queryBuilder.select(
         fields.map(column => {
@@ -66,9 +66,9 @@ export class PositionService {
 
   async findOne(id: number, fields: string[]) {
     const allowedRelations = [
-      'candidateProgramme',
-      'candidateProgramme.candidate',
-      'candidateProgramme.programme',
+      'zonalcandidateProgramme',
+      'zonalcandidateProgramme.candidate',
+      'zonalcandidateProgramme.programme',
     ];
 
     // validating fields
@@ -80,9 +80,9 @@ export class PositionService {
       const queryBuilder = this.positionRepository
         .createQueryBuilder('position')
         .where('position.id = :id', { id })
-        .leftJoinAndSelect('position.candidateProgramme', 'candidateProgramme')
-        .leftJoinAndSelect('candidateProgramme.candidate', 'candidate')
-        .leftJoinAndSelect('candidateProgramme.programme', 'programme');
+        .leftJoinAndSelect('position.zonalcandidateProgramme', 'zonalcandidateProgramme')
+        .leftJoinAndSelect('zonalcandidateProgramme.candidate', 'candidate')
+        .leftJoinAndSelect('zonalcandidateProgramme.programme', 'programme');
 
       queryBuilder.select(
         fields.map(column => {
@@ -110,9 +110,9 @@ export class PositionService {
   // find by name
   async findOneByName(name: string, fields: string[]) {
     const allowedRelations = [
-      'candidateProgramme',
-      'candidateProgramme.candidate',
-      'candidateProgramme.programme',
+      'zonalcandidateProgramme',
+      'zonalcandidateProgramme.candidate',
+      'zonalcandidateProgramme.programme',
     ];
 
     // validating fields
@@ -124,9 +124,9 @@ export class PositionService {
       const queryBuilder = this.positionRepository
         .createQueryBuilder('position')
         .where('position.name = :name', { name })
-        .leftJoinAndSelect('position.candidateProgramme', 'candidateProgramme')
-        .leftJoinAndSelect('candidateProgramme.candidate', 'candidate')
-        .leftJoinAndSelect('candidateProgramme.programme', 'programme');
+        .leftJoinAndSelect('position.zonalcandidateProgramme', 'zonalcandidateProgramme')
+        .leftJoinAndSelect('zonalcandidateProgramme.candidate', 'candidate')
+        .leftJoinAndSelect('zonalcandidateProgramme.programme', 'programme');
 
       queryBuilder.select(
         fields.map(column => {
