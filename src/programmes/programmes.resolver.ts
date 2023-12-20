@@ -92,6 +92,24 @@ export class ProgrammesResolver {
     return this.programmesService.findProgrammesByZone(zone , fields);
   }
 
+  @Query(() => [Programme], { name: 'findResultEnteredProgrammesByZone' })
+  findResultEnteredProgrammesByZone(
+    @Args('zone', { type: () => String }) zone: string,
+    @Info() info: any
+  ) {
+    const fields = Object.keys(fieldsProjection(info));
+    return this.programmesService.findResultEnteredProgrammesByZone(zone , fields);
+  }
+
+  @Query(() => [Programme], { name: 'findResultPublishedProgrammesByZone' })
+  findResultPublishedProgrammesByZone(
+    @Args('zone', { type: () => String }) zone: string,
+    @Info() info: any
+  ) {
+    const fields = Object.keys(fieldsProjection(info));
+    return this.programmesService.findResultPublishedProgrammesByZone(zone , fields);
+  }
+
 
   @Mutation(() => Programme)
   @HasRoles(Roles.Controller)
