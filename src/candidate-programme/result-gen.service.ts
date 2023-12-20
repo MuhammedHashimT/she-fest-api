@@ -562,7 +562,7 @@ export class ResultGenService {
 
     return programme;
   }
-  
+
 
   async publishResults(programCode: [string]) {
     let data = []
@@ -574,7 +574,6 @@ export class ResultGenService {
 
     return data;
   }
-
 
   // upload result mannualy by controller
   async uploadResultManually(programCode: string, input: AddManual[]) {
@@ -593,13 +592,13 @@ export class ResultGenService {
 
     // checking the programme is already published
 
-    if (programme.resultPublished) {
-      throw new HttpException('Programme is already published', HttpStatus.BAD_REQUEST);
-    }
+    // if (programme.resultPublished) {
+    //   throw new HttpException('Programme is already published', HttpStatus.BAD_REQUEST);
+    // }
 
     // verify the result
 
-    await this.verifyResultManual(input, programme.programCode);
+    // await this.verifyResultManual(input, programme.programCode);
 
     // giving grade to each candidate
 

@@ -212,8 +212,8 @@ export class ProgrammesService {
       'category.settings',
       'candidateProgramme.candidatesOfGroup',
       'candidateProgramme.candidate.team.zone',
-      // 'CandidateProgramme.zonalgrade',
-      // 'candidateProgramme.position',
+      'candidateProgramme.zonalgrade',
+      'candidateProgramme.zonalposition',
     ];
 
     // validating fields
@@ -230,6 +230,8 @@ export class ProgrammesService {
         .leftJoinAndSelect('candidate.team', 'team')
         .leftJoinAndSelect('team.zone', 'zone')
         .leftJoinAndSelect('category.settings', 'settings')
+        .leftJoinAndSelect('candidateProgramme.zonalgrade', 'zonalgrade')
+        .leftJoinAndSelect('candidateProgramme.zonalposition', 'zonalposition')
         .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup')
         .orderBy('programme.id', 'ASC');
 
@@ -375,8 +377,9 @@ export class ProgrammesService {
       'candidateProgramme.candidate.team',
       'category.settings',
       'candidateProgramme.candidatesOfGroup',
-      // 'CandidateProgramme.zonalgrade',
-      // 'candidateProgramme.position',
+      'candidateProgramme.candidate.team.zone',
+      'candidateProgramme.zonalgrade',
+      'candidateProgramme.zonalposition',
     ];
 
     // validating fields
@@ -392,10 +395,11 @@ export class ProgrammesService {
         .leftJoinAndSelect('programme.candidateProgramme', 'candidateProgramme')
         .leftJoinAndSelect('candidateProgramme.candidate', 'candidate')
         .leftJoinAndSelect('candidate.team', 'team')
+        .leftJoinAndSelect('team.zone', 'zone')
         .leftJoinAndSelect('category.settings', 'settings')
+        .leftJoinAndSelect('candidateProgramme.zonalgrade', 'zonalgrade')
+        .leftJoinAndSelect('candidateProgramme.zonalposition', 'zonalposition')
         .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup')
-        .leftJoinAndSelect('CandidateProgramme.zonalgrade', 'zonalgrade')
-        .leftJoinAndSelect('candidateProgramme.zonalposition', 'zonalposition');
 
       queryBuilder.select(
         fields.map(column => {
@@ -409,6 +413,11 @@ export class ProgrammesService {
         }),
       );
       const programme = await queryBuilder.getOne();
+
+      if (!programme) {
+        throw new HttpException(`Cant find a programme with id ${id}`, HttpStatus.BAD_REQUEST);
+      }
+
       return programme;
     } catch (e) {
       throw new HttpException(
