@@ -259,6 +259,66 @@ export class ProgrammesService {
     }
   }
 
+  // programmes by zone candidateProgrammes
+  async findProgrammesByZone(zone: string, fields: string[]) {
+    const allowedRelations = [
+      'category',
+      'candidateProgramme',
+      'candidateProgramme.candidate',
+      'candidateProgramme.candidate.team',
+      'category.settings',
+      'candidateProgramme.candidatesOfGroup',
+      'candidateProgramme.candidate.team.zone',
+      'candidateProgramme.zonalgrade',
+      'candidateProgramme.zonalposition',
+    ];
+
+    // validating fields
+    fields = fieldsValidator(fields, allowedRelations);
+    // checking if fields contains id
+    fields = fieldsIdChecker(fields);
+
+    try {
+      const queryBuilder = this.programmeRepository
+        .createQueryBuilder('programme')
+        .leftJoinAndSelect('programme.category', 'category')
+        .leftJoinAndSelect('programme.candidateProgramme', 'candidateProgramme')
+        .leftJoinAndSelect('candidateProgramme.candidate', 'candidate')
+        .leftJoinAndSelect('candidate.team', 'team')
+        .leftJoinAndSelect('team.zone', 'zone')
+        .leftJoinAndSelect('category.settings', 'settings')
+        .leftJoinAndSelect('candidateProgramme.zonalgrade', 'zonalgrade')
+        .leftJoinAndSelect('candidateProgramme.zonalposition', 'zonalposition')
+        .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup')
+        .where('zone.name = :zone', { zone })
+        .orderBy('programme.id', 'ASC');
+
+      queryBuilder.select(
+        fields.map(column => {
+          const splitted = column.split('.');
+
+          if (splitted.length > 1) {
+            return `${splitted[splitted.length - 2]}.${splitted[splitted.length - 1]}`;
+          } else {
+            return `programme.${column}`;
+          }
+        }),
+      );
+      const programme = await queryBuilder.getMany();
+      return programme;
+    } catch (e) {
+      console.log(e);
+
+      throw new HttpException(
+        'An Error have when finding programme ',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        { cause: e },
+      );
+    }
+  }
+
+  
+
   // find the result entered programmes
   async findResultEnteredProgrammes(fields: string[]) {
     const allowedRelations = [
@@ -440,9 +500,10 @@ export class ProgrammesService {
           'category.settings',
           'candidateProgramme.candidate',
           'candidateProgramme.candidate.team',
+          'candidateProgramme.candidate.team.zone',
           'candidateProgramme.candidatesOfGroup',
-          // 'CandidateProgramme.zonalgrade',
-          // 'candidateProgramme.position',
+          'candidateProgramme.zonalgrade',
+          'candidateProgramme.zonalposition',
         ],
       });
 
