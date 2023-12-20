@@ -63,6 +63,7 @@ export class ZoneService {
   update(id: number, updateZoneInput: UpdateZoneInput) {
     try{
       const updateZone = this.zoneRepository.create({
+        id: id,
         name: updateZoneInput.name,
       });
       return this.zoneRepository.save(updateZone);

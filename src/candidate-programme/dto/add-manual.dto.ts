@@ -20,5 +20,5 @@ export class AddManual {
     position: string
 
     @Field()
-    zonal:boolean;
+    zonal: boolean
 }
