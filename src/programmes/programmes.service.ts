@@ -211,6 +211,7 @@ export class ProgrammesService {
       'candidateProgramme.candidate.team',
       'category.settings',
       'candidateProgramme.candidatesOfGroup',
+      'candidateProgramme.candidate.team.zone',
       // 'CandidateProgramme.zonalgrade',
       // 'candidateProgramme.position',
     ];
@@ -230,7 +231,6 @@ export class ProgrammesService {
         .leftJoinAndSelect('team.zone', 'zone')
         .leftJoinAndSelect('category.settings', 'settings')
         .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup')
-          .leftJoinAndSelect('CandidateProgramme.zonalgrade', 'grade')
         .orderBy('programme.id', 'ASC');
 
       queryBuilder.select(
