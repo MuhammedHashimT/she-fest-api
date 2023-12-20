@@ -317,19 +317,20 @@ export class ProgrammesService {
     }
   }
 
-  
+
 
   // find the result entered programmes
   async findResultEnteredProgrammes(fields: string[]) {
-    const allowedRelations = [
+     const allowedRelations = [
       'category',
       'candidateProgramme',
       'candidateProgramme.candidate',
       'candidateProgramme.candidate.team',
       'category.settings',
       'candidateProgramme.candidatesOfGroup',
-      // 'CandidateProgramme.zonalgrade',
-      // 'candidateProgramme.position',
+      'candidateProgramme.candidate.team.zone',
+      'candidateProgramme.zonalgrade',
+      'candidateProgramme.zonalposition',
     ];
 
     // validating fields
@@ -346,10 +347,11 @@ export class ProgrammesService {
         .leftJoinAndSelect('programme.candidateProgramme', 'candidateProgramme')
         .leftJoinAndSelect('candidateProgramme.candidate', 'candidate')
         .leftJoinAndSelect('candidate.team', 'team')
+        .leftJoinAndSelect('team.zone', 'zone')
         .leftJoinAndSelect('category.settings', 'settings')
+        .leftJoinAndSelect('candidateProgramme.zonalgrade', 'zonalgrade')
+        .leftJoinAndSelect('candidateProgramme.zonalposition', 'zonalposition')
         .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup')
-        // .leftJoinAndSelect('CandidateProgramme.zonalgrade', 'grade')
-        // .leftJoinAndSelect('candidateProgramme.position', 'position');
 
       queryBuilder.select(
         fields.map(column => {
@@ -383,8 +385,9 @@ export class ProgrammesService {
       'candidateProgramme.candidate.team',
       'category.settings',
       'candidateProgramme.candidatesOfGroup',
-      // 'CandidateProgramme.zonalgrade',
-      // 'candidateProgramme.position',
+      'candidateProgramme.candidate.team.zone',
+      'candidateProgramme.zonalgrade',
+      'candidateProgramme.zonalposition',
     ];
 
     // validating fields
@@ -401,9 +404,11 @@ export class ProgrammesService {
         .leftJoinAndSelect('programme.candidateProgramme', 'candidateProgramme')
         .leftJoinAndSelect('candidateProgramme.candidate', 'candidate')
         .leftJoinAndSelect('candidate.team', 'team')
+        .leftJoinAndSelect('team.zone', 'zone')
         .leftJoinAndSelect('category.settings', 'settings')
+        .leftJoinAndSelect('candidateProgramme.zonalgrade', 'zonalgrade')
+        .leftJoinAndSelect('candidateProgramme.zonalposition', 'zonalposition')
         .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup')
-        // .leftJoinAndSelect('CandidateProgramme.zonalgrade', 'grade')
         // .leftJoinAndSelect('candidateProgramme.position', 'position');
 
       queryBuilder.select(
