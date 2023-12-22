@@ -450,9 +450,9 @@ export class ProgrammesService {
             if (cp.candidate?.team?.name === team.name) {
               teamWithPoint.totalPoint += cp.zonalpoint;
               if(team.isDegreeHave){
-                teamWithPoint.totalPercentage += parseFloat(((teamWithPoint.totalPoint/386)/100).toFixed(3));
+                teamWithPoint.totalPercentage += (teamWithPoint.totalPoint/386)/100;
               }else{
-                teamWithPoint.totalPercentage += parseFloat(((teamWithPoint.totalPoint/210)/100).toFixed(3));
+                teamWithPoint.totalPercentage += (teamWithPoint.totalPoint/210)/100;
               }
 
               teamWithPoint.categoryWisePoint.forEach(categoryWisePoint => {
@@ -650,9 +650,9 @@ export class ProgrammesService {
             if (cp.candidate?.team?.name === team.name) {
               teamWithPoint.totalPoint += cp.zonalpoint;
               if(team.isDegreeHave){
-                teamWithPoint.totalPercentage += parseFloat(((teamWithPoint.totalPoint/386)/100).toFixed(3));
+                teamWithPoint.totalPercentage += (teamWithPoint.totalPoint/386)/100;
               }else{
-                teamWithPoint.totalPercentage += parseFloat(((teamWithPoint.totalPoint/210)/100).toFixed(3));
+                teamWithPoint.totalPercentage += (teamWithPoint.totalPoint/210)/100;
               }
               teamWithPoint.categoryWisePoint.forEach(categoryWisePoint => {
                 if (categoryWisePoint.categoryName === programme?.category?.name) {
