@@ -11,6 +11,7 @@ import { ScheduleCreate } from './dto/scheduleCreate.dto';
 import { createInput } from './dto/create-inputs.inputs';
 import { fieldsProjection } from 'graphql-fields-list';
 import { CredentialsService } from 'src/credentials/credentials.service';
+import { ResultsRead } from './dto/results.read';
 
 @Resolver(() => Programme)
 export class ProgrammesResolver {
@@ -60,19 +61,6 @@ export class ProgrammesResolver {
   }
 
 
-  @Query(() => [Programme], { name: 'resultEnteredProgrammes' })
-  async resultEnteredProgrammes(@Info() info: any, @Args('api_key') api_key: string,) {
-    await this.credentialsService.ValidateApiKey(api_key);
-    const fields = Object.keys(fieldsProjection(info));
-    return this.programmesService.findResultEnteredProgrammes(fields);
-  }
-
-  @Query(() => [Programme], { name: 'resultPublishedProgrammes' })
-  async resultPublishedProgrammes(@Info() info: any, @Args('api_key') api_key: string,) {
-    await this.credentialsService.ValidateApiKey(api_key);
-    const fields = Object.keys(fieldsProjection(info));
-    return this.programmesService.findResultPublishedProgrammes(fields);
-  }
 
   @Query(() => [Programme], { name: 'programmesByCategory' })
   findAllByCategory(
@@ -92,7 +80,18 @@ export class ProgrammesResolver {
     return this.programmesService.findProgrammesByZone(zone , fields);
   }
 
-  @Query(() => [Programme], { name: 'findResultEnteredProgrammesByZone' })
+
+
+  @Query(() => [Programme], { name: 'findProgrammesByTeam' })
+  findProgrammesByTeam(
+    @Args('team', { type: () => String }) team: string,
+    @Info() info: any
+  ) {
+    const fields = Object.keys(fieldsProjection(info));
+    return this.programmesService.findProgrammesByTeam(team , fields);
+  }
+
+  @Query(() => ResultsRead , { name: 'findResultEnteredProgrammesByZone' })
   findResultEnteredProgrammesByZone(
     @Args('zone', { type: () => String }) zone: string,
     @Info() info: any
@@ -108,6 +107,27 @@ export class ProgrammesResolver {
   ) {
     const fields = Object.keys(fieldsProjection(info));
     return this.programmesService.findResultPublishedProgrammesByZone(zone , fields);
+  }
+
+  // findResultEnteredProgrammesByTeam
+  @Query(() => [Programme], { name: 'findResultEnteredProgrammesByTeam' })
+  findResultEnteredProgrammesByTeam(
+    @Args('team', { type: () => String }) team: string,
+    @Info() info: any
+  ) {
+    const fields = Object.keys(fieldsProjection(info));
+    return this.programmesService.findResultEnteredProgrammesByTeam(team , fields);
+  }
+
+  // findResultPublishedProgrammesByTeam
+  @Query(() => [Programme], { name: 'findResultPublishedProgrammesByTeam' })
+  findResultPublishedProgrammesByTeam(
+    @Args('team', { type: () => String }) team: string,
+    @Args('zone', { type: () => String }) zone: string,
+    @Info() info: any
+  ) {
+    const fields = Object.keys(fieldsProjection(info));
+    return this.programmesService.findResultPublishedProgrammesByTeam(team , fields , zone);
   }
 
 

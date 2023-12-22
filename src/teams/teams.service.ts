@@ -84,6 +84,49 @@ export class TeamsService {
     }
   }
 
+  // remove degree by teamName
+
+  async removeDegree(teamName: string) {
+    const team = await this.teamRepository.findOneBy({ name: teamName });
+
+    if (!team) {
+      throw new HttpException(`cant find team with name ${teamName}`, HttpStatus.BAD_REQUEST);
+    }
+    try {
+      return this.teamRepository.query(
+        `UPDATE team SET idDegreeHave = false WHERE name = "${teamName}" `,
+      );
+    } catch (e) {
+      throw new HttpException(
+        'An Error have when inserting idDegreeHave ',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        { cause: e },
+      );
+    }
+  }
+
+  // add degree by teamName
+
+  async addDegree(teamName: string) {
+    const team = await this.teamRepository.findOneBy({ name: teamName });
+
+    if (!team) {
+      throw new HttpException(`cant find team with name ${teamName}`, HttpStatus.BAD_REQUEST);
+    }
+    try {
+      return this.teamRepository.query(
+        `UPDATE team SET idDegreeHave = true WHERE name = "${teamName}" `,
+      );
+    } catch (e) {
+      throw new HttpException(
+        'An Error have when inserting idDegreeHave ',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        { cause: e },
+      );
+    }
+  }
+
+
   async findAll(fields: string[]) {
     const allowedRelations = [
       'candidates',

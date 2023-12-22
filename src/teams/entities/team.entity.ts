@@ -30,6 +30,10 @@ export class Team {
   @Field({ nullable: true })
   name: string;
 
+  @Column({default: true})
+  @Field({ nullable: true })
+  isDegreeHave: boolean;
+
   @Field({ nullable: true })
   @Column({ nullable: true })
   shortName: string;

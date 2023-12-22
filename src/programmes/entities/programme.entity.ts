@@ -90,14 +90,60 @@ export class Programme {
   @Column()
   @Field({ nullable: true })
   conceptNote: string;
+  @Column({ default: false })
+  @Field(() => Boolean, { defaultValue: false })
+  enteredA: Boolean;
 
   @Column({ default: false })
   @Field(() => Boolean, { defaultValue: false })
-  resultEntered: Boolean;
+  enteredB: Boolean;
 
   @Column({ default: false })
+  @Field(() => Boolean, { defaultValue: false })
+  enteredC: Boolean;
+
+  @Column({ default: false })
+  @Field(() => Boolean, { defaultValue: false })
+  enteredD: Boolean;
+
+  @Column({ default: false })
+  @Field(() => Boolean, { defaultValue: false })
+  enteredE: Boolean;
+
+  @Column({ default: false })
+  @Field(() => Boolean, { defaultValue: false })
+  enteredFinal: Boolean;
+
+  @Column({ default: false })
+  @Field(() => Boolean, { defaultValue: false })
+  publishedA: Boolean;
+
+  @Column({ default: false })
+  @Field(() => Boolean, { defaultValue: false })
+  publishedB: Boolean;
+
+  @Column({ default: false })
+  @Field(() => Boolean, { defaultValue: false })
+  publishedC: Boolean;
+
+  @Column({ default: false })
+  @Field(() => Boolean, { defaultValue: false })
+  publishedD: Boolean;
+
+  @Column({ default: false })
+  @Field(() => Boolean, { defaultValue: false })
+  publishedE: Boolean;
+
+  @Column({ default: false })
+  @Field(() => Boolean, { defaultValue: false })
+  publishedFinal: Boolean;
+
+
   @Field(() => Boolean, { defaultValue: false })
   resultPublished: Boolean;
+
+  @Field(() => Boolean, { defaultValue: false })
+  resultEntered: Boolean;
 
   @Field(() => Int, { nullable: true })
   @Column({ nullable: true })

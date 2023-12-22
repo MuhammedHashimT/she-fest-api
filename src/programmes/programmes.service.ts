@@ -12,6 +12,46 @@ import { Category } from 'src/category/entities/category.entity';
 import { CredentialsService } from '../credentials/credentials.service';
 import { createInput } from './dto/create-inputs.inputs';
 import { fieldsIdChecker, fieldsValidator, isDateValid } from 'src/utils/util';
+import { TeamsService } from 'src/teams/teams.service';
+import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
+
+@ObjectType()
+export class CategoryWisePoint {
+  @Field()
+  categoryName: string;
+  @Field(()=> Int)
+  categoryPoint: number;
+}
+
+@ObjectType()
+export class teamWithPoint {
+  @Field()
+  teamName: string;
+  @Field()
+  zoneName: string;
+  @Field(()=>Int)
+  totalPoint: number;
+  @Field(()=> Float)
+  totalPercentage: number;
+  @Field(()=>[CategoryWisePoint])
+  categoryWisePoint: CategoryWisePoint[]
+};
+
+@ObjectType()
+export class candidateWithPoint {
+  @Field()
+  candidateName: string;
+  @Field()
+  chestNo: string;
+  @Field()
+  teamName: string;
+  @Field()
+  zoneName: string;
+  @Field(()=>Int)
+  totalPoint: number;
+  @Field()
+  categoryName: string;
+};
 
 @Injectable()
 export class ProgrammesService {
@@ -20,7 +60,8 @@ export class ProgrammesService {
     private categoryService: CategoryService,
     private detailsService: DetailsService,
     private readonly CredentialService: CredentialsService,
-  ) {}
+    private readonly TeamsService: TeamsService,
+  ) { }
 
   //  To create many Programmes at a time , usually using on Excel file upload
 
@@ -317,15 +358,16 @@ export class ProgrammesService {
   // find the result entered programmes by zone
   async findResultEnteredProgrammesByZone(zone: string, fields: string[]) {
     const allowedRelations = [
-      'category',
-      'candidateProgramme',
-      'candidateProgramme.candidate',
-      'candidateProgramme.candidate.team',
-      'category.settings',
-      'candidateProgramme.candidatesOfGroup',
-      'candidateProgramme.candidate.team.zone',
-      'candidateProgramme.zonalgrade',
-      'candidateProgramme.zonalposition',
+      'programmes',
+      'programmes.category',
+      'programmes.candidateProgramme',
+      'programmes.candidateProgramme.candidate',
+      'programmes.candidateProgramme.candidate.team',
+      'programmes.category.settings',
+      'programmes.candidateProgramme.candidatesOfGroup',
+      'programmes.candidateProgramme.candidate.team.zone',
+      'programmes.candidateProgramme.zonalgrade',
+      'programmes.candidateProgramme.zonalposition',
     ];
 
     // validating fields
@@ -333,6 +375,17 @@ export class ProgrammesService {
 
     // checking if fields contains id
     fields = fieldsIdChecker(fields);
+
+    // remove the programmes. from the fields
+    fields = fields.map(field => {
+      console.log(field);
+      
+      if (field.includes('programmes.')) {
+        return field.replace('programmes.', '');
+      } else {
+        return field;
+      }
+    });
 
     try {
       const queryBuilder = this.programmeRepository
@@ -343,7 +396,8 @@ export class ProgrammesService {
         .leftJoinAndSelect('candidate.team', 'team')
         .leftJoinAndSelect('team.zone', 'zone')
         .where('zone.name = :zone', { zone })
-        .andWhere('programme.resultEntered = true')
+        .andWhere(`programme.entered${zone} = true`)
+        .andWhere(`candidateProgramme.zonalpoint > 0`)
         .leftJoinAndSelect('category.settings', 'settings')
         .leftJoinAndSelect('candidateProgramme.zonalgrade', 'zonalgrade')
         .leftJoinAndSelect('candidateProgramme.zonalposition', 'zonalposition')
@@ -360,21 +414,141 @@ export class ProgrammesService {
           }
         }),
       );
-      const programme = await queryBuilder.getMany();
+      const programmes = await queryBuilder.getMany();
 
-      // on every programme return candidateProgrammes where zonalPoint one or more
+      // find all teams of this zone and total thier zonalpoint
 
-      programme.forEach(programme => {
-        programme.candidateProgramme = programme.candidateProgramme.filter(
-          candidateProgramme => candidateProgramme?.zonalpoint > 0,
-        );
+      const teams = await this.TeamsService.findAll(['name', 'zone', 'zone.name', 'zone.id' , 'isDegreeHave']);
+
+      const categories = await this.categoryService.findAll(['name', 'id']);
+
+      const teamsOfZone = teams.filter(team => team.zone.name === zone);
+
+      const teamsWithPoint: teamWithPoint[] = [];
+
+      // looping the teams
+
+      teamsOfZone.forEach(team => {
+        const teamWithPoint: teamWithPoint = {
+          totalPercentage : 0,
+          teamName: team.name,
+          zoneName: team.zone.name,
+          totalPoint: 0,
+          categoryWisePoint: categories.map(category => {
+            return {
+              categoryName: category.name,
+              categoryPoint: 0,
+            };
+          }),
+        };
+
+        // looping the programmes
+
+        programmes?.forEach(programme => {
+
+          programme?.candidateProgramme?.forEach(cp => {
+            if (cp.candidate?.team?.name === team.name) {
+              teamWithPoint.totalPoint += cp.zonalpoint;
+              if(team.isDegreeHave){
+                teamWithPoint.totalPercentage += parseFloat(((teamWithPoint.totalPoint/386)/100).toFixed(3));
+              }else{
+                teamWithPoint.totalPercentage += parseFloat(((teamWithPoint.totalPoint/210)/100).toFixed(3));
+              }
+
+              teamWithPoint.categoryWisePoint.forEach(categoryWisePoint => {
+                if (categoryWisePoint.categoryName === programme?.category?.name) {
+                  categoryWisePoint.categoryPoint += cp?.zonalpoint;
+                }
+              });
+            }
+          }
+          );
+
+
+
+          teamsWithPoint.push(teamWithPoint);
+
+        });
+
+
+      });
+
+      teamsWithPoint.sort((a, b) => {
+        return b.totalPoint - a.totalPoint;
+      }
+      )
+
+      // finding top 5 candidates
+
+      const topperCandidates: candidateWithPoint[] = [];
+
+      programmes?.forEach(programme => {
+
+        if (programme.type == Type.SINGLE) {
+          programme?.candidateProgramme?.forEach(cp => {
+
+            // checking is candidate already in the topperCandidates array
+            const isCandidateExist = topperCandidates.some(
+              candidate => candidate.candidateName === cp?.candidate?.name,
+            );
+
+            if (isCandidateExist) {
+              // add the point to the candidate
+              topperCandidates.forEach(candidate => {
+                if (candidate.candidateName === cp?.candidate?.name) {
+                  candidate.totalPoint += cp?.zonalpoint;
+                }
+              });
+            }
+
+            const candidateWithPoint: candidateWithPoint = {
+              candidateName: cp.candidate.name,
+              teamName: cp.candidate.team.name,
+              zoneName: cp.candidate.team.zone.name,
+              totalPoint: cp.zonalpoint,
+              categoryName: programme.category.name,
+              chestNo: cp.candidate.chestNO,
+            };
+
+            topperCandidates.push(candidateWithPoint);
+          });
+        }
+
+      });
+
+      topperCandidates.sort((a, b) => {
+        return b.totalPoint - a.totalPoint;
+      }
+      )
+
+      // taking top 5 candidates from a category on topperCandidates
+
+      const top5Candidates: candidateWithPoint[] = [];
+
+      categories.forEach(category => {
+        let count = 0;
+        topperCandidates.forEach(candidate => {
+          if (candidate.categoryName === category.name && count < 5) {
+            top5Candidates.push(candidate);
+            count++;
+          }
+        });
       });
 
 
-      return programme;
+      console.log(top5Candidates);
+      
+
+
+      return {
+        programmes : programmes,
+        topTeams : teamsWithPoint,
+        topCandidates : top5Candidates
+      }
+
     } catch (e) {
       throw new HttpException(
-        'An Error have when finding programme ',
+        'An Error have when finding programme ' + e.message,
         HttpStatus.INTERNAL_SERVER_ERROR,
         { cause: e },
       );
@@ -384,15 +558,16 @@ export class ProgrammesService {
   // find the result published programmes by zone
   async findResultPublishedProgrammesByZone(zone: string, fields: string[]) {
     const allowedRelations = [
-      'category',
-      'candidateProgramme',
-      'candidateProgramme.candidate',
-      'candidateProgramme.candidate.team',
-      'category.settings',
-      'candidateProgramme.candidatesOfGroup',
-      'candidateProgramme.candidate.team.zone',
-      'candidateProgramme.zonalgrade',
-      'candidateProgramme.zonalposition',
+      'programmes',
+      'programmes.category',
+      'programmes.candidateProgramme',
+      'programmes.candidateProgramme.candidate',
+      'programmes.candidateProgramme.candidate.team',
+      'programmes.category.settings',
+      'programmes.candidateProgramme.candidatesOfGroup',
+      'programmes.candidateProgramme.candidate.team.zone',
+      'programmes.candidateProgramme.zonalgrade',
+      'programmes.candidateProgramme.zonalposition',
     ];
 
     // validating fields
@@ -400,6 +575,15 @@ export class ProgrammesService {
 
     // checking if fields contains id
     fields = fieldsIdChecker(fields);
+
+    // remove the programmes. from the fields
+    fields = fields.map(field => {
+      if (field.includes('programmes.')) {
+        return field.replace('programmes.', '');
+      } else {
+        return field;
+      }
+    });
 
     try {
       const queryBuilder = this.programmeRepository
@@ -410,7 +594,9 @@ export class ProgrammesService {
         .leftJoinAndSelect('candidate.team', 'team')
         .leftJoinAndSelect('team.zone', 'zone')
         .where('zone.name = :zone', { zone })
-        .andWhere('programme.resultPublished = true')
+        .andWhere(`programme.published${zone} = true`)
+        // and where candidateProgramme zonalpoint is greater than 0
+        .andWhere(`candidateProgramme.zonalpoint > 0`)
         .leftJoinAndSelect('category.settings', 'settings')
         .leftJoinAndSelect('candidateProgramme.zonalgrade', 'zonalgrade')
         .leftJoinAndSelect('candidateProgramme.zonalposition', 'zonalposition')
@@ -428,16 +614,193 @@ export class ProgrammesService {
           }
         }),
       );
-      const programme = await queryBuilder.getMany();
+      const programmes = await queryBuilder.getMany();
 
-      programme.forEach(programme => {
-        programme.candidateProgramme = programme.candidateProgramme.filter(
-          candidateProgramme => candidateProgramme?.zonalpoint > 0,
-        );
+      // find all teams of this zone and total thier zonalpoint
+        
+      const teams = await this.TeamsService.findAll(['name', 'zone', 'zone.name', 'zone.id']);
+
+      const categories = await this.categoryService.findAll(['name', 'id']);
+
+      const teamsOfZone = teams.filter(team => team.zone.name === zone);
+
+      const teamsWithPoint: teamWithPoint[] = [];
+
+      // looping the teams
+
+      teamsOfZone.forEach(team => {
+        const teamWithPoint: teamWithPoint = {
+          totalPercentage : 0,
+          teamName: team.name,
+          zoneName: team.zone.name,
+          totalPoint: 0,
+          categoryWisePoint: categories.map(category => {
+            return {
+              categoryName: category.name,
+              categoryPoint: 0,
+            };
+          }),
+        };
+
+        // looping the programmes
+
+        programmes?.forEach(programme => {
+
+          programme?.candidateProgramme?.forEach(cp => {
+            if (cp.candidate?.team?.name === team.name) {
+              teamWithPoint.totalPoint += cp.zonalpoint;
+              if(team.isDegreeHave){
+                teamWithPoint.totalPercentage += parseFloat(((teamWithPoint.totalPoint/386)/100).toFixed(3));
+              }else{
+                teamWithPoint.totalPercentage += parseFloat(((teamWithPoint.totalPoint/210)/100).toFixed(3));
+              }
+              teamWithPoint.categoryWisePoint.forEach(categoryWisePoint => {
+                if (categoryWisePoint.categoryName === programme?.category?.name) {
+                  categoryWisePoint.categoryPoint += cp?.zonalpoint;
+                }
+              });
+            }
+          }
+          );
+
+
+          teamsWithPoint.push(teamWithPoint);
+
+        });
+
+
       });
 
+      teamsWithPoint.sort((a, b) => {
+        return b.totalPoint - a.totalPoint;
+      }
+      )
+
+      // finding top 5 candidates
+
+      const topperCandidates: candidateWithPoint[] = [];
+
+      programmes?.forEach(programme => {
+
+        if (programme.type == Type.SINGLE) {
+          programme?.candidateProgramme?.forEach(cp => {
+
+            // checking is candidate already in the topperCandidates array
+            const isCandidateExist = topperCandidates.some(
+              candidate => candidate.candidateName === cp?.candidate?.name,
+            );
+
+            if (isCandidateExist) {
+              // add the point to the candidate
+              topperCandidates.forEach(candidate => {
+                if (candidate.candidateName === cp?.candidate?.name) {
+                  candidate.totalPoint += cp?.zonalpoint;
+                }
+              });
+            }
+
+            const candidateWithPoint: candidateWithPoint = {
+              candidateName: cp.candidate.name,
+              teamName: cp.candidate.team.name,
+              zoneName: cp.candidate.team.zone.name,
+              totalPoint: cp.zonalpoint,
+              categoryName: programme.category.name,
+              chestNo: cp.candidate.chestNO,
+            };
+
+            topperCandidates.push(candidateWithPoint);
+          });
+        }
+
+      });
+
+      topperCandidates.sort((a, b) => {
+        return b.totalPoint - a.totalPoint;
+      }
+      )
+
+      // taking top 5 candidates from a category on topperCandidates
+
+      const top5Candidates: candidateWithPoint[] = [];
+
+      categories.forEach(category => {
+        let count = 0;
+        topperCandidates.forEach(candidate => {
+          if (candidate.categoryName === category.name && count < 5) {
+            top5Candidates.push(candidate);
+            count++;
+          }
+        });
+      });
+
+    
+      return {
+        programmes : programmes,
+        topTeams : teamsWithPoint,
+        topCandidates : top5Candidates
+      }
+
+    } catch (e) {
+
+      throw new HttpException(
+        'An Error have when finding programme ',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        { cause: e },
+      );
+    }
+
+  }
+
+  // programmes by team candidateProgrammes
+  async findProgrammesByTeam(team: string, fields: string[]) {
+    const allowedRelations = [
+      'category',
+      'candidateProgramme',
+      'candidateProgramme.candidate',
+      'candidateProgramme.candidate.team',
+      'category.settings',
+      'candidateProgramme.candidatesOfGroup',
+      'candidateProgramme.candidate.team.zone',
+      'candidateProgramme.zonalgrade',
+      'candidateProgramme.zonalposition',
+    ];
+
+    // validating fields
+    fields = fieldsValidator(fields, allowedRelations);
+    // checking if fields contains id
+    fields = fieldsIdChecker(fields);
+
+    try {
+      const queryBuilder = this.programmeRepository
+        .createQueryBuilder('programme')
+        .leftJoinAndSelect('programme.category', 'category')
+        .leftJoinAndSelect('programme.candidateProgramme', 'candidateProgramme')
+        .leftJoinAndSelect('candidateProgramme.candidate', 'candidate')
+        .leftJoinAndSelect('candidate.team', 'team')
+        .leftJoinAndSelect('team.zone', 'zone')
+        .leftJoinAndSelect('category.settings', 'settings')
+        .leftJoinAndSelect('candidateProgramme.zonalgrade', 'zonalgrade')
+        .leftJoinAndSelect('candidateProgramme.zonalposition', 'zonalposition')
+        .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup')
+        .where('team.name = :team', { team })
+        .orderBy('programme.id', 'ASC');
+
+      queryBuilder.select(
+        fields.map(column => {
+          const splitted = column.split('.');
+
+          if (splitted.length > 1) {
+            return `${splitted[splitted.length - 2]}.${splitted[splitted.length - 1]}`;
+          } else {
+            return `programme.${column}`;
+          }
+        }),
+      );
+      const programme = await queryBuilder.getMany();
       return programme;
     } catch (e) {
+      console.log(e);
+
       throw new HttpException(
         'An Error have when finding programme ',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -446,8 +809,9 @@ export class ProgrammesService {
     }
   }
 
-  // find the result entered programmes
-  async findResultEnteredProgrammes(fields: string[]) {
+  // find the result entered programmes by team
+
+  async findResultEnteredProgrammesByTeam(team: string, fields: string[]) {
     const allowedRelations = [
       'category',
       'candidateProgramme',
@@ -469,12 +833,13 @@ export class ProgrammesService {
     try {
       const queryBuilder = this.programmeRepository
         .createQueryBuilder('programme')
-        .where('programme.resultEntered = true')
         .leftJoinAndSelect('programme.category', 'category')
         .leftJoinAndSelect('programme.candidateProgramme', 'candidateProgramme')
         .leftJoinAndSelect('candidateProgramme.candidate', 'candidate')
         .leftJoinAndSelect('candidate.team', 'team')
         .leftJoinAndSelect('team.zone', 'zone')
+        .where('team.name = :team', { team })
+        .andWhere(`candidateProgramme.zonalpoint > 0`)
         .leftJoinAndSelect('category.settings', 'settings')
         .leftJoinAndSelect('candidateProgramme.zonalgrade', 'zonalgrade')
         .leftJoinAndSelect('candidateProgramme.zonalposition', 'zonalposition')
@@ -492,18 +857,20 @@ export class ProgrammesService {
         }),
       );
       const programme = await queryBuilder.getMany();
+
       return programme;
     } catch (e) {
       throw new HttpException(
-        'An Error have when finding programme ',
+        'An Error have when finding programme ' + e.message,
         HttpStatus.INTERNAL_SERVER_ERROR,
         { cause: e },
       );
     }
   }
 
-  // result published programmes
-  async findResultPublishedProgrammes(fields: string[]) {
+  // find the result published programmes by team
+
+  async findResultPublishedProgrammesByTeam(team: string, fields: string[], zone: string) {
     const allowedRelations = [
       'category',
       'candidateProgramme',
@@ -525,12 +892,15 @@ export class ProgrammesService {
     try {
       const queryBuilder = this.programmeRepository
         .createQueryBuilder('programme')
-        .where('programme.resultPublished = true')
         .leftJoinAndSelect('programme.category', 'category')
         .leftJoinAndSelect('programme.candidateProgramme', 'candidateProgramme')
         .leftJoinAndSelect('candidateProgramme.candidate', 'candidate')
         .leftJoinAndSelect('candidate.team', 'team')
         .leftJoinAndSelect('team.zone', 'zone')
+        .where('team.name = :team', { team })
+        .andWhere(`programme.published${zone} = true`)
+        // and where candidateProgramme zonalpoint is greater than 0
+        .andWhere(`candidateProgramme.zonalpoint > 0`)
         .leftJoinAndSelect('category.settings', 'settings')
         .leftJoinAndSelect('candidateProgramme.zonalgrade', 'zonalgrade')
         .leftJoinAndSelect('candidateProgramme.zonalposition', 'zonalposition')
@@ -549,6 +919,7 @@ export class ProgrammesService {
         }),
       );
       const programme = await queryBuilder.getMany();
+
       return programme;
     } catch (e) {
       throw new HttpException(
@@ -558,6 +929,7 @@ export class ProgrammesService {
       );
     }
   }
+
 
   async findOne(id: number, fields: string[]) {
     const allowedRelations = [
@@ -977,7 +1349,7 @@ export class ProgrammesService {
     }
   }
 
-  async enterResult(programCode: string) {
+  async enterResult(programCode: string, zone: string) {
     // checking the code is correct
     const programme: Programme = await this.findOneByCodeForCheck(programCode);
 
@@ -989,9 +1361,33 @@ export class ProgrammesService {
     }
 
     try {
-      return this.programmeRepository.query(
-        `UPDATE programme SET resultEntered = true WHERE programCode = "${programCode}" `,
-      );
+      if (zone == 'A') {
+        return this.programmeRepository.query(
+          `UPDATE programme SET enteredA = true WHERE programCode = "${programCode}" `,
+        );
+      } else if (zone == 'B') {
+        return this.programmeRepository.query(
+          `UPDATE programme SET enteredB = true WHERE programCode = "${programCode}" `,
+        );
+      } else if (zone == 'C') {
+        return this.programmeRepository.query(
+          `UPDATE programme SET enteredC = true WHERE programCode = "${programCode}" `,
+        );
+      } else if (zone == 'D') {
+        return this.programmeRepository.query(
+          `UPDATE programme SET enteredD = true WHERE programCode = "${programCode}" `,
+        );
+      } else if (zone == 'E') {
+        return this.programmeRepository.query(
+          `UPDATE programme SET enteredE = true WHERE programCode = "${programCode}" `,
+        );
+      } else if (zone == 'Final') {
+        return this.programmeRepository.query(
+          `UPDATE programme SET enteredFinal = true WHERE programCode = "${programCode}" `,
+        );
+      }
+
+
     } catch (e) {
       throw new HttpException(
         'An Error have when updating programme ',
@@ -1001,7 +1397,7 @@ export class ProgrammesService {
     }
   }
 
-  async removeResult(programCode: string) {
+  async removeResult(programCode: string, zone: string) {
     // checking the code is correct
     const programme: Programme = await this.findOneByCodeForCheck(programCode);
 
@@ -1013,19 +1409,43 @@ export class ProgrammesService {
     }
 
     try {
-      return this.programmeRepository.query(
-        `UPDATE programme SET resultEntered = false WHERE programCode = "${programCode}" `,
-      );
+      if (zone == 'A') {
+        return this.programmeRepository.query(
+          `UPDATE programme SET publishedA = false WHERE programCode = "${programCode}" `,
+        );
+      } else if (zone == 'B') {
+        return this.programmeRepository.query(
+          `UPDATE programme SET publishedB = false WHERE programCode = "${programCode}" `,
+        );
+      } else if (zone == 'C') {
+        return this.programmeRepository.query(
+          `UPDATE programme SET publishedC = false WHERE programCode = "${programCode}" `,
+        );
+      } else if (zone == 'D') {
+        return this.programmeRepository.query(
+          `UPDATE programme SET publishedD = false WHERE programCode = "${programCode}" `,
+        );
+      } else if (zone == 'E') {
+        return this.programmeRepository.query(
+          `UPDATE programme SET publishedE = false WHERE programCode = "${programCode}" `,
+        );
+      } else if (zone == 'Final') {
+        return this.programmeRepository.query(
+          `UPDATE programme SET publishedFinal = false WHERE programCode = "${programCode}" `,
+        );
+      }
+
+
     } catch (e) {
       throw new HttpException(
-        'An Error have when deleting data ',
+        'An Error have when updating programme ',
         HttpStatus.INTERNAL_SERVER_ERROR,
         { cause: e },
       );
     }
   }
 
-  async publishResult(programCode: string) {
+  async publishResult(programCode: string, zone: string) {
     // checking the code is correct
     const programme: Programme = await this.findOneByCodeForCheck(programCode);
 
@@ -1037,9 +1457,33 @@ export class ProgrammesService {
     }
 
     try {
-      return this.programmeRepository.query(
-        `UPDATE programme SET resultPublished = true WHERE programCode = "${programCode}" `,
-      );
+      if (zone == 'A') {
+        return this.programmeRepository.query(
+          `UPDATE programme SET publishedA = true WHERE programCode = "${programCode}" `,
+        );
+      } else if (zone == 'B') {
+        return this.programmeRepository.query(
+          `UPDATE programme SET publishedB = true WHERE programCode = "${programCode}" `,
+        );
+      } else if (zone == 'C') {
+        return this.programmeRepository.query(
+          `UPDATE programme SET publishedC = true WHERE programCode = "${programCode}" `,
+        );
+      } else if (zone == 'D') {
+        return this.programmeRepository.query(
+          `UPDATE programme SET publishedD = true WHERE programCode = "${programCode}" `,
+        );
+      } else if (zone == 'E') {
+        return this.programmeRepository.query(
+          `UPDATE programme SET publishedE = true WHERE programCode = "${programCode}" `,
+        );
+      } else if (zone == 'Final') {
+        return this.programmeRepository.query(
+          `UPDATE programme SET publishedFinal = true WHERE programCode = "${programCode}" `,
+        );
+      }
+
+
     } catch (e) {
       throw new HttpException(
         'An Error have when updating programme ',

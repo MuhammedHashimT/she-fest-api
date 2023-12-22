@@ -97,10 +97,10 @@ export class CandidatesResolver {
     return this.candidatesService.getCategoryBasedToppers();
   }
 
-  @Query(() => [Category], { name: 'getPublishedCategoryBasedToppers' })
-  getPublishedCategoryBasedToppers() {
-    return this.candidatesService.getPublishedCategoryBasedToppers();
-  }
+  // @Query(() => [Category], { name: 'getPublishedCategoryBasedToppers' })
+  // getPublishedCategoryBasedToppers() {
+  //   return this.candidatesService.getPublishedCategoryBasedToppers();
+  // }
 
   @Query(() => Candidate, { name: 'candidate' })
   async findOne(

@@ -38,6 +38,24 @@ export class TeamsResolver {
     return this.teamsService.findAll(fields);
   }
 
+  // RemoveDegree by teamName
+
+  @Mutation(() => Team)
+  @HasRoles(Roles.Admin , Roles.Controller)
+  @UseGuards(RolesGuard)
+  removeDegreeByTeamName(@Args('teamName') teamName: string) {
+    return this.teamsService.removeDegree(teamName);
+  }
+
+  // addDegree by teamName
+
+  @Mutation(() => Team)
+  @HasRoles(Roles.Admin , Roles.Controller)
+  @UseGuards(RolesGuard)
+  addDegreeByTeamName(@Args('teamName') teamName: string) {
+    return this.teamsService.addDegree(teamName);
+  }
+
   // update many teams
   @Mutation(() => [Team])
   @HasRoles(Roles.Admin , Roles.Controller)

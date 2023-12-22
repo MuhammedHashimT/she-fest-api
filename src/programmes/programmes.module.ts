@@ -6,13 +6,15 @@ import { Programme } from './entities/programme.entity';
 import { CategoryModule } from 'src/category/category.module';
 import { CredentialsModule } from 'src/credentials/credentials.module';
 import { DetailsModule } from 'src/details/details.module';
+import { TeamsModule } from 'src/teams/teams.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Programme]),
     CategoryModule,
     CredentialsModule,
-    DetailsModule
+    DetailsModule,
+    TeamsModule,
   ],
   providers: [ProgrammesResolver, ProgrammesService],
   exports: [ProgrammesService],

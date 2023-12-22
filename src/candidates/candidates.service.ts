@@ -30,7 +30,7 @@ export class CandidatesService {
     private credentialService: CredentialsService,
     private categorySettingsService: CategorySettingsService,
     private programmeService: ProgrammesService,
-  ) {}
+  ) { }
 
   //  To create many candidates at a time , Normally using on Excel file upload
 
@@ -394,7 +394,7 @@ export class CandidatesService {
         where: {
           chestNO,
         },
-        relations: ['category', 'team', 'candidateProgrammes', 'cgp', 'team.zone'],
+        relations: ['category', 'team', 'candidateProgrammes', 'cgp', 'team.zone' , 'candidateProgrammes.zonalgrade' , 'candidateProgrammes.zonalposition' , 'candidateProgrammes.finalgrade' , 'candidateProgrammes.finalposition' , 'candidateProgrammes.programme'],
       });
 
       if (!candidate) {
@@ -403,6 +403,8 @@ export class CandidatesService {
           HttpStatus.BAD_REQUEST,
         );
       }
+
+      const zoneName = candidate.team.zone.name;
 
       // // change what in cgp to candidateProgrammes with what already in candidateProgrammes
       const cgp = candidate.cgp || [];
@@ -420,6 +422,29 @@ export class CandidatesService {
           candidateProgrammes.push(cgp);
         }
       });
+
+      // if result is not published then remove the result from candidateProgrammes
+
+      candidateProgrammes.forEach(candidateProgramme => {
+
+        // check the result is published in the way of published[herezonename]
+
+        const published = candidateProgramme.programme['published' + zoneName];
+
+        // console.log('====================================');
+        // console.log(published);
+        // console.log('====================================');
+
+        if (!candidateProgramme.programme.resultPublished) {
+          candidateProgramme.zonalpoint = null;
+          candidateProgramme.finalpoint = null;
+          candidateProgramme.zonalgrade = null;
+          candidateProgramme.zonalposition = null;
+          candidateProgramme.finalgrade = null;
+          candidateProgramme.finalposition = null;
+        }
+      });
+
 
       candidate.candidateProgrammes = candidateProgrammes;
 
@@ -779,68 +804,68 @@ export class CandidatesService {
     return candaidatedByCategory;
   }
 
-  async getPublishedCategoryBasedToppers() {
-    // get all candidates and their candidate programmes then add the points in candiate programmes to candiate and sort them by points and return the top 5
-    // candidates must be category based
+  // async getPublishedCategoryBasedToppers() {
+  //   // get all candidates and their candidate programmes then add the points in candiate programmes to candiate and sort them by points and return the top 5
+  //   // candidates must be category based
 
-    // get all candidates
+  //   // get all candidates
 
-    const candidates = await this.candidateRepository.find({
-      relations: [
-        'candidateProgrammes',
-        'category',
-        'candidateProgrammes.programme',
-        'team',
-        'team.zone',
-      ],
-    });
+  //   const candidates = await this.candidateRepository.find({
+  //     relations: [
+  //       'candidateProgrammes',
+  //       'category',
+  //       'candidateProgrammes.programme',
+  //       'team',
+  //       'team.zone',
+  //     ],
+  //   });
 
-    const categories = await this.categoryService.findAll(['id', 'name']);
+  //   const categories = await this.categoryService.findAll(['id', 'name']);
 
-    const pointedCandidates = candidates.map((candidate, i) => {
-      let total = 0;
-      let totalSports = 0;
-      candidate.candidateProgrammes.forEach(candidateProgramme => {
-        if (
-          candidateProgramme.programme?.type === Type.SINGLE &&
-          candidateProgramme.programme?.resultPublished
-        ) {
-          total = total + candidateProgramme.zonalpoint;
-        }
-      });
+  //   const pointedCandidates = candidates.map((candidate, i) => {
+  //     let total = 0;
+  //     let totalSports = 0;
+  //     candidate.candidateProgrammes.forEach(candidateProgramme => {
+  //       if (
+  //         candidateProgramme.programme?.type === Type.SINGLE &&
+  //         candidateProgramme.programme?.resultPublished
+  //       ) {
+  //         total = total + candidateProgramme.zonalpoint;
+  //       }
+  //     });
 
-      return {
-        ...candidate,
-        individualPoint: total,
-        individualSportsPoint: totalSports,
-      };
-    });
+  //     return {
+  //       ...candidate,
+  //       individualPoint: total,
+  //       individualSportsPoint: totalSports,
+  //     };
+  //   });
 
-    // setting the category based toppers
+  //   // setting the category based toppers
 
-    const candaidatedByCategory = categories.map(category => {
-      const candidates = pointedCandidates.filter(
-        candidate => candidate.category.name === category.name,
-      );
+  //   const candaidatedByCategory = categories.map(category => {
+  //     const candidates = pointedCandidates.filter(
+  //       candidate => candidate.category.name === category.name,
+  //     );
 
-      const sortedCandidates = candidates
-        .slice()
-        .sort((a, b) => b.individualPoint - a.individualPoint);
-      const sortedSportsCandidates = candidates
-        .slice()
-        .sort((a, b) => b.individualSportsPoint - a.individualSportsPoint);
+  //     const sortedCandidates = candidates
+  //       .slice()
+  //       .sort((a, b) => b.individualPoint - a.individualPoint);
+  //     const sortedSportsCandidates = candidates
+  //       .slice()
+  //       .sort((a, b) => b.individualSportsPoint - a.individualSportsPoint);
 
-      return {
-        ...category,
-        candidates: [...sortedCandidates.slice(0, 5), ...sortedSportsCandidates.slice(0, 5)],
-      };
-    });
+  //     return {
+  //       ...category,
+  //       candidates: [...sortedCandidates.slice(0, 5), ...sortedSportsCandidates.slice(0, 5)],
+  //     };
+  //   });
 
-    // log first 5 candidates
-    // console.log(pointedCandidates.sort((a, b) => b.total - a.total).slice(0, 5));
+  //   // log first 5 candidates
+  //   // console.log(pointedCandidates.sort((a, b) => b.total - a.total).slice(0, 5));
 
-    return candaidatedByCategory;
-  }
+  //   return candaidatedByCategory;
+  // }
 
   // Update data
 

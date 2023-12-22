@@ -32,43 +32,43 @@ export class ResultGenService {
 
   // upload Normal Result
 
-  async addResult(programCode: string, input: arrayInput) {
-    // check if programme exist
+  // async addResult(programCode: string, input: arrayInput) {
+  //   // check if programme exist
 
-    const programme: Programme = await this.programmeService.findOneByCode(programCode);
+  //   const programme: Programme = await this.programmeService.findOneByCode(programCode);
 
-    // all candidates of programme
+  //   // all candidates of programme
 
-    let candidatesOfProgramme: CandidateProgramme[] = programme.candidateProgramme;
+  //   let candidatesOfProgramme: CandidateProgramme[] = programme.candidateProgramme;
 
-    if (!programme) {
-      throw new HttpException('Programme does not exist', HttpStatus.BAD_REQUEST);
-    }
+  //   if (!programme) {
+  //     throw new HttpException('Programme does not exist', HttpStatus.BAD_REQUEST);
+  //   }
 
-    // checking the programme is already published
+  //   // checking the programme is already published
 
-    if (programme.resultPublished) {
-      throw new HttpException('Programme is already published', HttpStatus.BAD_REQUEST);
-    }
+  //   if (programme.resultPublished) {
+  //     throw new HttpException('Programme is already published', HttpStatus.BAD_REQUEST);
+  //   }
 
-    // verify the result
-    await this.verifyResult(input.inputs, programCode);
+  //   // verify the result
+  //   await this.verifyResult(input.inputs, programCode);
 
-    for (let index = 0; index < programme.candidateProgramme.length; index++) {
-      const candidate = candidatesOfProgramme[index];
+  //   for (let index = 0; index < programme.candidateProgramme.length; index++) {
+  //     const candidate = candidatesOfProgramme[index];
 
-      candidate.mark = input.inputs[index].mark;
-    }
+  //     candidate.mark = input.inputs[index].mark;
+  //   }
 
-    // process the result
-    candidatesOfProgramme = await this.processResult(programme);
-    try {
-      await this.programmeService.enterResult(programCode);
-      return this.candidateProgrammeRepository.save(candidatesOfProgramme);
-    } catch (error) {
-      throw new HttpException('Error on updating result', HttpStatus.BAD_REQUEST);
-    }
-  }
+  //   // process the result
+  //   candidatesOfProgramme = await this.processResult(programme);
+  //   try {
+  //     await this.programmeService.enterResult(programCode);
+  //     return this.candidateProgrammeRepository.save(candidatesOfProgramme);
+  //   } catch (error) {
+  //     throw new HttpException('Error on updating result', HttpStatus.BAD_REQUEST);
+  //   }
+  // }
 
   // result upload process
 
@@ -415,70 +415,70 @@ export class ResultGenService {
     return sortedCandidateProgramme;
   }
 
-  async approveJudgeResult(programCode: string, judgeName: string) {
-    // check if programme exist
+  // async approveJudgeResult(programCode: string, judgeName: string) {
+  //   // check if programme exist
 
-    const programme: Programme = await this.programmeService.findOneByCode(programCode);
+  //   const programme: Programme = await this.programmeService.findOneByCode(programCode);
 
-    if (!programme) {
-      throw new HttpException('Programme does not exist', HttpStatus.BAD_REQUEST);
-    }
+  //   if (!programme) {
+  //     throw new HttpException('Programme does not exist', HttpStatus.BAD_REQUEST);
+  //   }
 
-    // checking the programme is already published
+  //   // checking the programme is already published
 
-    if (programme.resultPublished) {
-      throw new HttpException('Programme is already published', HttpStatus.BAD_REQUEST);
-    }
+  //   if (programme.resultPublished) {
+  //     throw new HttpException('Programme is already published', HttpStatus.BAD_REQUEST);
+  //   }
 
-    // check if judge name is correct format
-    const regex = new RegExp(/^judge[1-7]$/);
+  //   // check if judge name is correct format
+  //   const regex = new RegExp(/^judge[1-7]$/);
 
-    if (!regex.test(judgeName)) {
-      throw new HttpException('Judge name is not in correct format', HttpStatus.BAD_REQUEST);
-    }
+  //   if (!regex.test(judgeName)) {
+  //     throw new HttpException('Judge name is not in correct format', HttpStatus.BAD_REQUEST);
+  //   }
 
-    // all candidates of programme
+  //   // all candidates of programme
 
-    let candidatesOfProgrammes: CandidateProgramme[] = programme.candidateProgramme;
+  //   let candidatesOfProgrammes: CandidateProgramme[] = programme.candidateProgramme;
 
-    // add the mark of judge to mark of candidate programme
+  //   // add the mark of judge to mark of candidate programme
 
-    for (let index = 0; index < candidatesOfProgrammes.length; index++) {
-      const candidateProgramme = candidatesOfProgrammes[index];
+  //   for (let index = 0; index < candidatesOfProgrammes.length; index++) {
+  //     const candidateProgramme = candidatesOfProgrammes[index];
 
-      if (!candidateProgramme[judgeName]) {
-        throw new HttpException(
-          `Judge ${judgeName} result is not uploaded`,
-          HttpStatus.BAD_REQUEST,
-        );
-      }
+  //     if (!candidateProgramme[judgeName]) {
+  //       throw new HttpException(
+  //         `Judge ${judgeName} result is not uploaded`,
+  //         HttpStatus.BAD_REQUEST,
+  //       );
+  //     }
 
-      if (candidateProgramme.mark) {
-        candidateProgramme.mark =
-          ((candidateProgramme.mark + candidateProgramme[judgeName]) / 20) * 10;
-      } else {
-        candidateProgramme.mark = candidateProgramme[judgeName];
-      }
-    }
+  //     if (candidateProgramme.mark) {
+  //       candidateProgramme.mark =
+  //         ((candidateProgramme.mark + candidateProgramme[judgeName]) / 20) * 10;
+  //     } else {
+  //       candidateProgramme.mark = candidateProgramme[judgeName];
+  //     }
+  //   }
 
-    // process the result
-    candidatesOfProgrammes = await this.processResult(programme);
+  //   // process the result
+  //   candidatesOfProgrammes = await this.processResult(programme);
 
-    // set null to judge result
-    for (let index = 0; index < candidatesOfProgrammes.length; index++) {
-      const candidateProgramme = candidatesOfProgrammes[index];
-      candidateProgramme[judgeName] = null;
-    }
+  //   // set null to judge result
+  //   for (let index = 0; index < candidatesOfProgrammes.length; index++) {
+  //     const candidateProgramme = candidatesOfProgrammes[index];
+  //     candidateProgramme[judgeName] = null;
+  //   }
 
-    try {
-      await this.programmeService.enterResult(programCode);
-      return this.candidateProgrammeRepository.save(candidatesOfProgrammes);
-    } catch (error) {
-      throw new HttpException('Error on updating result', HttpStatus.BAD_REQUEST);
-    }
-  }
+  //   try {
+  //     await this.programmeService.enterResult(programCode);
+  //     return this.candidateProgrammeRepository.save(candidatesOfProgrammes);
+  //   } catch (error) {
+  //     throw new HttpException('Error on updating result', HttpStatus.BAD_REQUEST);
+  //   }
+  // }
 
-  async publishResult(programCode: string) {
+  async publishResult(programCode: string , zone: string) {
     // checking the programme exist
 
     const programme: Programme = await this.programmeService.findOneByCode(programCode);
@@ -489,27 +489,67 @@ export class ResultGenService {
 
     // checking the programme is already published
 
-    if (programme.resultPublished) {
-      throw new HttpException('Programme is already published', HttpStatus.BAD_REQUEST);
+    if(zone == 'A'){
+      if (programme.publishedA) {
+        throw new HttpException(`Programme is already published on zone ${zone}`, HttpStatus.BAD_REQUEST);
+      }
+    }else if(zone == 'B'){
+      if (programme.publishedB) {
+        throw new HttpException(`Programme is already published on zone ${zone}`, HttpStatus.BAD_REQUEST);
+      }
+    } else if(zone == 'C'){
+      if (programme.publishedC) {
+        throw new HttpException(`Programme is already published on zone ${zone}`, HttpStatus.BAD_REQUEST);
+      }
+    } else if(zone == 'D'){
+      if (programme.publishedD) {
+        throw new HttpException(`Programme is already published on zone ${zone}`, HttpStatus.BAD_REQUEST);
+      }
+    } else if(zone == 'E'){
+      if (programme.publishedE) {
+        throw new HttpException(`Programme is already published on zone ${zone}`, HttpStatus.BAD_REQUEST);
+      }
+    } else if(zone == 'Final'){
+      if (programme.publishedFinal) {
+        throw new HttpException(`Programme is already published on zone ${zone}`, HttpStatus.BAD_REQUEST);
+      }
     }
 
-    // checking the programme have any issue
 
-    if (programme.anyIssue) {
-      throw new HttpException(
-        `Programme ${programCode} is having an issue`,
-        HttpStatus.BAD_REQUEST,
-      );
+
+    // checking the programme is entered 
+
+    if(zone == 'A'){
+      if (!programme.enteredA) {
+        throw new HttpException(`Programme is not entered on zone ${zone}`, HttpStatus.BAD_REQUEST);
+      }
+    }else if(zone == 'B'){
+      if (!programme.enteredB) {
+        throw new HttpException(`Programme is not entered on zone ${zone}`, HttpStatus.BAD_REQUEST);
+      }
+    }
+    else if(zone == 'C'){
+      if (!programme.enteredC) {
+        throw new HttpException(`Programme is not entered on zone ${zone}`, HttpStatus.BAD_REQUEST);
+      }
+    }
+    else if(zone == 'D'){
+      if (!programme.enteredD) {
+        throw new HttpException(`Programme is not entered on zone ${zone}`, HttpStatus.BAD_REQUEST);
+      }
+    }
+    else if(zone == 'E'){
+      if (!programme.enteredE) {
+        throw new HttpException(`Programme is not entered on zone ${zone}`, HttpStatus.BAD_REQUEST);
+      }
+    }
+    else if(zone == 'Final'){
+      if (!programme.enteredFinal) {
+        throw new HttpException(`Programme is not entered on zone ${zone}`, HttpStatus.BAD_REQUEST);
+      }
     }
 
-    // checking the the result is added to the programme
 
-    if (!programme.resultEntered) {
-      throw new HttpException(
-        `Programme ${programCode} is not having any result`,
-        HttpStatus.BAD_REQUEST,
-      );
-    }
 
     // add the point to total point of candidate's team
 
@@ -552,16 +592,16 @@ export class ResultGenService {
 
     // set the result published to true
 
-    this.programmeService.publishResult(programCode);
+    this.programmeService.publishResult(programCode , zone);
 
     return programme;
   }
 
-  async publishResults(programCode: [string]) {
+  async publishResults(programCode: [string] , zone: string) {
     let data = [];
     for (let index = 0; index < programCode.length; index++) {
       const program = programCode[index];
-      let programme = await this.publishResult(program);
+      let programme = await this.publishResult(program , zone);
       data.push(programme);
     }
 
@@ -699,7 +739,7 @@ export class ResultGenService {
 
     // make the programme result entered
 
-    await this.programmeService.enterResult(programCode);
+    await this.programmeService.enterResult(programCode , zone);
 
     return programme;
   }

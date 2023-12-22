@@ -16,59 +16,61 @@ export class ResultGenResolver {
   constructor(
     private readonly candidateProgrammeService: CandidateProgrammeService,
     private readonly resultGenService: ResultGenService,
-  ) {}
+  ) { }
 
-  @Mutation(() => [CandidateProgramme])
-  @HasRoles(Roles.Controller)
-  @UseGuards(RolesGuard)
-  addNormalResult(
-    @Args('programmeCode') programmeCode: string,
-    @Args({ name: 'addResult', type: () => arrayInput })
-    addResult: arrayInput,
-  ) {
-    return this.resultGenService.addResult(programmeCode, addResult);
-  }
+  // @Mutation(() => [CandidateProgramme])
+  // @HasRoles(Roles.Controller)
+  // @UseGuards(RolesGuard)
+  // addNormalResult(
+  //   @Args('programmeCode') programmeCode: string,
+  //   @Args({ name: 'addResult', type: () => arrayInput })
+  //   addResult: arrayInput,
+  // ) {
+  //   return this.resultGenService.addResult(programmeCode, addResult);
+  // }
 
-  @Mutation(() => [CandidateProgramme])
-  @HasRoles(Roles.Controller)
-  @UseGuards(RolesGuard)
-  approveJudgeResult(
-    @Args('programmeCode') programmeCode: string,  
-      @Args('judgeName') judgeName: string
-  ) {
-    return this.resultGenService.approveJudgeResult(programmeCode, judgeName);
-  }
+  // @Mutation(() => [CandidateProgramme])
+  // @HasRoles(Roles.Controller)
+  // @UseGuards(RolesGuard)
+  // approveJudgeResult(
+  //   @Args('programmeCode') programmeCode: string,  
+  //     @Args('judgeName') judgeName: string
+  // ) {
+  //   return this.resultGenService.approveJudgeResult(programmeCode, judgeName);
+  // }
 
 
 
-  @Mutation(()=> [Programme])
+  @Mutation(() => [Programme])
   @HasRoles(Roles.Controller)
   @UseGuards(RolesGuard)
   async publishResults(
-    @Args('programmeCode' , { type: () => [String] }) programmeCode: [string],
+    @Args('programmeCode', { type: () => [String] }) programmeCode: [string],
+    @Args('zone') zone: string,
   ) {
-    return this.resultGenService.publishResults(programmeCode);
+    return this.resultGenService.publishResults(programmeCode, zone);
   }
 
-  @Mutation(()=> Int)
+  @Mutation(() => Int)
   @HasRoles(Roles.Controller)
   @UseGuards(RolesGuard)
   async publishResult(
     @Args('programmeCode') programmeCode: string,
+    @Args('zone') zone: string,
   ) {
-    return this.resultGenService.publishResult(programmeCode);
+    return this.resultGenService.publishResult(programmeCode, zone);
   }
 
   // upload result manually
-  @Mutation(() => Programme , { name: 'uploadResultManually' })
+  @Mutation(() => Programme, { name: 'uploadResultManually' })
   @HasRoles(Roles.Controller)
   @UseGuards(RolesGuard)
- async uploadResultanually(
+  async uploadResultanually(
     @Args('programmeCode') programmeCode: string,
-    @Args('addManual' ,  { type: () => [AddManual] }  ) addManual: [AddManual] ,
-    @Args('zone' ) zone : string ,
+    @Args('addManual', { type: () => [AddManual] }) addManual: [AddManual],
+    @Args('zone') zone: string,
   ) {
-    return this.resultGenService.uploadResultManually(programmeCode, addManual , zone);
+    return this.resultGenService.uploadResultManually(programmeCode, addManual, zone);
   }
 
 }
