@@ -474,7 +474,7 @@ export class ProgrammesService {
       });
 
       teamsWithPoint.sort((a, b) => {
-        return b.totalPoint - a.totalPoint;
+        return b.totalPercentage - a.totalPercentage;
       }
       )
 
@@ -672,7 +672,7 @@ export class ProgrammesService {
       });
 
       teamsWithPoint.sort((a, b) => {
-        return b.totalPoint - a.totalPoint;
+        return b.totalPercentage - a.totalPercentage;
       }
       )
 

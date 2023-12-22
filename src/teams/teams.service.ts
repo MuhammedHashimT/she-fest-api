@@ -94,11 +94,11 @@ export class TeamsService {
     }
     try {
       return this.teamRepository.query(
-        `UPDATE team SET idDegreeHave = false WHERE name = "${teamName}" `,
+        `UPDATE team SET isDegreeHave = false WHERE name = "${teamName}" `,
       );
     } catch (e) {
       throw new HttpException(
-        'An Error have when inserting idDegreeHave ',
+        'An Error have when inserting isDegreeHave ',
         HttpStatus.INTERNAL_SERVER_ERROR,
         { cause: e },
       );
@@ -115,11 +115,11 @@ export class TeamsService {
     }
     try {
       return this.teamRepository.query(
-        `UPDATE team SET idDegreeHave = true WHERE name = "${teamName}" `,
+        `UPDATE team SET isDegreeHave = true WHERE name = "${teamName}" `,
       );
     } catch (e) {
       throw new HttpException(
-        'An Error have when inserting idDegreeHave ',
+        'An Error have when inserting isDegreeHave ',
         HttpStatus.INTERNAL_SERVER_ERROR,
         { cause: e },
       );
