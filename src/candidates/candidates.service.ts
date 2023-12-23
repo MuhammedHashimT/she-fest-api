@@ -435,7 +435,7 @@ export class CandidatesService {
         // console.log(published);
         // console.log('====================================');
 
-        if (!candidateProgramme.programme.resultPublished) {
+        if (!published) {
           candidateProgramme.zonalpoint = null;
           candidateProgramme.finalpoint = null;
           candidateProgramme.zonalgrade = null;
