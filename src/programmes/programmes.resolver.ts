@@ -100,7 +100,7 @@ export class ProgrammesResolver {
     return this.programmesService.findResultEnteredProgrammesByZone(zone , fields);
   }
 
-  @Query(() => [Programme], { name: 'findResultPublishedProgrammesByZone' })
+  @Query(() => ResultsRead , { name: 'findResultPublishedProgrammesByZone' })
   findResultPublishedProgrammesByZone(
     @Args('zone', { type: () => String }) zone: string,
     @Info() info: any

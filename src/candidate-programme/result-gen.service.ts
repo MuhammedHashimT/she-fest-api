@@ -30,7 +30,7 @@ export class ResultGenService {
     private readonly candidateService: CandidatesService,
   ) {}
 
-  // upload Normal Result
+  // upload Normal Result by controller
 
   // async addResult(programCode: string, input: arrayInput) {
   //   // check if programme exist
