@@ -466,10 +466,10 @@ export class ProgrammesService {
 
 
 
-          teamsWithPoint.push(teamWithPoint);
-
+          
         });
-
+        
+        teamsWithPoint.push(teamWithPoint);
 
       });
 
@@ -664,10 +664,10 @@ export class ProgrammesService {
           );
 
 
-          teamsWithPoint.push(teamWithPoint);
-
+          
         });
-
+        
+        teamsWithPoint.push(teamWithPoint);
 
       });
 
