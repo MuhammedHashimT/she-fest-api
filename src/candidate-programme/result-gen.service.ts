@@ -28,7 +28,7 @@ export class ResultGenService {
     private readonly DetailService: DetailsService,
     private readonly teamService: TeamsService,
     private readonly candidateService: CandidatesService,
-  ) {}
+  ) { }
 
   // upload Normal Result by controller
 
@@ -478,7 +478,7 @@ export class ResultGenService {
   //   }
   // }
 
-  async publishResult(programCode: string , zone: string) {
+  async publishResult(programCode: string, zone: string) {
     // checking the programme exist
 
     const programme: Programme = await this.programmeService.findOneByCode(programCode);
@@ -489,27 +489,27 @@ export class ResultGenService {
 
     // checking the programme is already published
 
-    if(zone == 'A'){
+    if (zone == 'A') {
       if (programme.publishedA) {
         throw new HttpException(`Programme is already published on zone ${zone}`, HttpStatus.BAD_REQUEST);
       }
-    }else if(zone == 'B'){
+    } else if (zone == 'B') {
       if (programme.publishedB) {
         throw new HttpException(`Programme is already published on zone ${zone}`, HttpStatus.BAD_REQUEST);
       }
-    } else if(zone == 'C'){
+    } else if (zone == 'C') {
       if (programme.publishedC) {
         throw new HttpException(`Programme is already published on zone ${zone}`, HttpStatus.BAD_REQUEST);
       }
-    } else if(zone == 'D'){
+    } else if (zone == 'D') {
       if (programme.publishedD) {
         throw new HttpException(`Programme is already published on zone ${zone}`, HttpStatus.BAD_REQUEST);
       }
-    } else if(zone == 'E'){
+    } else if (zone == 'E') {
       if (programme.publishedE) {
         throw new HttpException(`Programme is already published on zone ${zone}`, HttpStatus.BAD_REQUEST);
       }
-    } else if(zone == 'Final'){
+    } else if (zone == 'Final') {
       if (programme.publishedFinal) {
         throw new HttpException(`Programme is already published on zone ${zone}`, HttpStatus.BAD_REQUEST);
       }
@@ -519,31 +519,31 @@ export class ResultGenService {
 
     // checking the programme is entered 
 
-    if(zone == 'A'){
+    if (zone == 'A') {
       if (!programme.enteredA) {
         throw new HttpException(`Programme is not entered on zone ${zone}`, HttpStatus.BAD_REQUEST);
       }
-    }else if(zone == 'B'){
+    } else if (zone == 'B') {
       if (!programme.enteredB) {
         throw new HttpException(`Programme is not entered on zone ${zone}`, HttpStatus.BAD_REQUEST);
       }
     }
-    else if(zone == 'C'){
+    else if (zone == 'C') {
       if (!programme.enteredC) {
         throw new HttpException(`Programme is not entered on zone ${zone}`, HttpStatus.BAD_REQUEST);
       }
     }
-    else if(zone == 'D'){
+    else if (zone == 'D') {
       if (!programme.enteredD) {
         throw new HttpException(`Programme is not entered on zone ${zone}`, HttpStatus.BAD_REQUEST);
       }
     }
-    else if(zone == 'E'){
+    else if (zone == 'E') {
       if (!programme.enteredE) {
         throw new HttpException(`Programme is not entered on zone ${zone}`, HttpStatus.BAD_REQUEST);
       }
     }
-    else if(zone == 'Final'){
+    else if (zone == 'Final') {
       if (!programme.enteredFinal) {
         throw new HttpException(`Programme is not entered on zone ${zone}`, HttpStatus.BAD_REQUEST);
       }
@@ -553,55 +553,55 @@ export class ResultGenService {
 
     // add the point to total point of candidate's team
 
-    const candidatesOfProgramme: CandidateProgramme[] = programme.candidateProgramme;
+    // const candidatesOfProgramme: CandidateProgramme[] = programme.candidateProgramme;
 
-    for (let index = 0; index < candidatesOfProgramme.length; index++) {
-      const candidateProgramme = candidatesOfProgramme[index];
+    // for (let index = 0; index < candidatesOfProgramme.length; index++) {
+    //   const candidateProgramme = candidatesOfProgramme[index];
 
-      let Hpoint = 0;
-      let Gpoint = 0;
-      let Ipoint = 0;
+    //   let Hpoint = 0;
+    //   let Gpoint = 0;
+    //   let Ipoint = 0;
 
-      let ICpoint = 0;
-      let GCpoint = 0;
+    //   let ICpoint = 0;
+    //   let GCpoint = 0;
 
-      if (candidateProgramme.programme.type == Type.HOUSE) {
-        Hpoint = candidateProgramme.zonalpoint;
-      } else if (candidateProgramme.programme.type == Type.GROUP) {
-        Gpoint = candidateProgramme.zonalpoint;
-        GCpoint = candidateProgramme.zonalpoint;
-      } else if (candidateProgramme.programme.type == Type.SINGLE) {
-        Ipoint = candidateProgramme.zonalpoint;
-        ICpoint = candidateProgramme.zonalpoint;
-      }
+    //   if (candidateProgramme.programme?.type == Type.HOUSE) {
+    //     Hpoint = candidateProgramme.zonalpoint;
+    //   } else if (candidateProgramme.programme?.type == Type.GROUP) {
+    //     Gpoint = candidateProgramme.zonalpoint;
+    //     GCpoint = candidateProgramme.zonalpoint;
+    //   } else if (candidateProgramme.programme?.type == Type.SINGLE) {
+    //     Ipoint = candidateProgramme.zonalpoint;
+    //     ICpoint = candidateProgramme.zonalpoint;
+    //   }
 
-      if (candidateProgramme.candidate.team) {
-        await this.teamService.setTeamPoint(
-          candidateProgramme.candidate.team.id,
-          candidateProgramme.zonalpoint,
-          Gpoint,
-          Ipoint,
-          Hpoint,
-        );
-      }
+    //   if (candidateProgramme.candidate?.team) {
+    //     await this.teamService.setTeamPoint(
+    //       candidateProgramme.candidate.team.id,
+    //       candidateProgramme.zonalpoint,
+    //       Gpoint,
+    //       Ipoint,
+    //       Hpoint,
+    //     );
+    //   }
 
-      // set the point to candidate
+    //   // set the point to candidate
 
-      await this.candidateService.addPoint(candidateProgramme.candidate.id, ICpoint, GCpoint);
-    }
+    //   await this.candidateService.addPoint(candidateProgramme.candidate.id, ICpoint, GCpoint);
+    // }
 
     // set the result published to true
 
-    this.programmeService.publishResult(programCode , zone);
+    this.programmeService.publishResult(programCode, zone);
 
-    return programme;
+    return;
   }
 
-  async publishResults(programCode: [string] , zone: string) {
+  async publishResults(programCode: [string], zone: string) {
     let data = [];
     for (let index = 0; index < programCode.length; index++) {
       const program = programCode[index];
-      let programme = await this.publishResult(program , zone);
+      let programme = await this.publishResult(program, zone);
       data.push(programme);
     }
 
@@ -641,24 +641,23 @@ export class ResultGenService {
     // sort the input
 
     const sortedInput = input.sort((a: AddManual, b: AddManual) => {
-      // here each chest no have 4 letters , fist one is letter and other 3 are numbers , so we are taking the last 3 numbers
+     // sort by chest no which is a string
+     const chestNoA: string = a?.chestNo;
+     const chestNoB: string = b?.chestNo;
 
-      const chestNoA = parseInt(a.chestNo.slice(1, 4));
-      const chestNoB = parseInt(b.chestNo.slice(1, 4));
-
-      return chestNoA - chestNoB;
+     return chestNoA.localeCompare(chestNoB);
     });
 
     // sort the candidate programme
 
-    const sortedCandidateProgramme = candidatesOfProgramme.sort(
+
+    let sortedCandidateProgramme = candidatesOfProgramme.sort(
       (a: CandidateProgramme, b: CandidateProgramme) => {
-        // here each chest no have 4 letters , fist one is letter and other 3 are numbers , so we are taking the last 3 numbers
+        // sort by chest no which is a string
+        const chestNoA: string = a.candidate?.chestNO;
+        const chestNoB: string = b.candidate?.chestNO;
 
-        const chestNoA = parseInt(a.candidate?.chestNO.slice(1, 4));
-        const chestNoB = parseInt(b.candidate?.chestNO.slice(1, 4));
-
-        return chestNoA - chestNoB;
+        return chestNoA.localeCompare(chestNoB);
       },
     );
 
@@ -739,7 +738,7 @@ export class ResultGenService {
 
     // make the programme result entered
 
-    await this.programmeService.enterResult(programCode , zone);
+    await this.programmeService.enterResult(programCode, zone);
 
     return programme;
   }
