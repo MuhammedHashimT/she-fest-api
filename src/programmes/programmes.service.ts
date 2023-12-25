@@ -1447,14 +1447,14 @@ export class ProgrammesService {
 
   async publishResult(programCode: string, zone: string) {
     // checking the code is correct
-    const programme: Programme = await this.findOneByCodeForCheck(programCode);
+    // const programme: Programme = await this.findOneByCodeForCheck(programCode);
 
-    if (!programme) {
-      throw new HttpException(
-        `Cant find a programme with code ${programCode}`,
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    // if (!programme) {
+    //   throw new HttpException(
+    //     `Cant find a programme with code ${programCode}`,
+    //     HttpStatus.BAD_REQUEST,
+    //   );
+    // }
 
     try {
       if (zone == 'A') {
