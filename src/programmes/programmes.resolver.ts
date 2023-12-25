@@ -142,6 +142,15 @@ export class ProgrammesResolver {
   }
 
   @Mutation(() => Programme)
+  // @HasRoles(Roles.Controller)
+  // @UseGuards(RolesGuard)
+  removePublish(
+    @Args('code') code: string,
+  ) {
+    return this.programmesService.removePublishedResult(code);
+  }
+
+  @Mutation(() => Programme)
   @HasRoles(Roles.Controller)
   @UseGuards(RolesGuard)
   removeProgramme(@Args('id', { type: () => Int }) id: number, @Context('req') req: any) {
