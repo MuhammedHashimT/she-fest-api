@@ -1506,7 +1506,7 @@ export class ProgrammesService {
 
     try {
       return this.programmeRepository.query(
-        `UPDATE programme SET resultPublished = false WHERE programCode = "${programCode}"`,
+        `UPDATE programme SET publishedA = false WHERE programCode = "${programCode}"`,
       );
     } catch (e) {
       throw new HttpException(
