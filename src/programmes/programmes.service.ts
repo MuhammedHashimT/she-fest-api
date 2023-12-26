@@ -19,7 +19,7 @@ import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
 export class CategoryWisePoint {
   @Field()
   categoryName: string;
-  @Field(()=> Int)
+  @Field(() => Int)
   categoryPoint: number;
 }
 
@@ -29,11 +29,11 @@ export class teamWithPoint {
   teamName: string;
   @Field()
   zoneName: string;
-  @Field(()=>Int)
+  @Field(() => Int)
   totalPoint: number;
-  @Field(()=> Float)
+  @Field(() => Float)
   totalPercentage: number;
-  @Field(()=>[CategoryWisePoint])
+  @Field(() => [CategoryWisePoint])
   categoryWisePoint: CategoryWisePoint[]
 };
 
@@ -47,7 +47,7 @@ export class candidateWithPoint {
   teamName: string;
   @Field()
   zoneName: string;
-  @Field(()=>Int)
+  @Field(() => Int)
   totalPoint: number;
   @Field()
   categoryName: string;
@@ -379,7 +379,7 @@ export class ProgrammesService {
     // remove the programmes. from the fields
     fields = fields.map(field => {
       console.log(field);
-      
+
       if (field.includes('programmes.')) {
         return field.replace('programmes.', '');
       } else {
@@ -418,7 +418,7 @@ export class ProgrammesService {
 
       // find all teams of this zone and total thier zonalpoint
 
-      const teams = await this.TeamsService.findAll(['name', 'zone', 'zone.name', 'zone.id' , 'isDegreeHave']);
+      const teams = await this.TeamsService.findAll(['name', 'zone', 'zone.name', 'zone.id', 'isDegreeHave']);
 
       const categories = await this.categoryService.findAll(['name', 'id']);
 
@@ -430,7 +430,7 @@ export class ProgrammesService {
 
       teamsOfZone.forEach(team => {
         const teamWithPoint: teamWithPoint = {
-          totalPercentage : 0,
+          totalPercentage: 0,
           teamName: team.name,
           zoneName: team.zone.name,
           totalPoint: 0,
@@ -449,10 +449,10 @@ export class ProgrammesService {
           programme?.candidateProgramme?.forEach(cp => {
             if (cp.candidate?.team?.name === team.name) {
               teamWithPoint.totalPoint += cp.zonalpoint;
-              if(team.isDegreeHave){
-                teamWithPoint.totalPercentage = (teamWithPoint.totalPoint/386)/100;
-              }else{
-                teamWithPoint.totalPercentage = (teamWithPoint.totalPoint/210)/100;
+              if (team.isDegreeHave) {
+                teamWithPoint.totalPercentage = (teamWithPoint.totalPoint / 386) / 100;
+              } else {
+                teamWithPoint.totalPercentage = (teamWithPoint.totalPoint / 210) / 100;
               }
 
               teamWithPoint.categoryWisePoint.forEach(categoryWisePoint => {
@@ -466,9 +466,9 @@ export class ProgrammesService {
 
 
 
-          
+
         });
-        
+
         teamsWithPoint.push(teamWithPoint);
 
       });
@@ -489,18 +489,19 @@ export class ProgrammesService {
 
             // checking is candidate already in the topperCandidates array
             const isCandidateExist = topperCandidates.some(
-              candidate => candidate.candidateName === cp?.candidate?.name,
+              candidate => candidate.chestNo == cp?.candidate?.chestNO,
             );
 
             if (isCandidateExist) {
               // add the point to the candidate
               topperCandidates.forEach(candidate => {
-                if (candidate.candidateName === cp?.candidate?.name) {
+                if (candidate.chestNo === cp?.candidate?.chestNO) {
                   candidate.totalPoint += cp?.zonalpoint;
                 }
               });
-            }
+            }else{
 
+              
             const candidateWithPoint: candidateWithPoint = {
               candidateName: cp.candidate.name,
               teamName: cp.candidate.team.name,
@@ -511,6 +512,8 @@ export class ProgrammesService {
             };
 
             topperCandidates.push(candidateWithPoint);
+            }
+
           });
         }
 
@@ -537,13 +540,13 @@ export class ProgrammesService {
 
 
       console.log(top5Candidates);
-      
+
 
 
       return {
-        programmes : programmes,
-        topTeams : teamsWithPoint,
-        topCandidates : top5Candidates
+        programmes: programmes,
+        topTeams: teamsWithPoint,
+        topCandidates: top5Candidates
       }
 
     } catch (e) {
@@ -617,7 +620,7 @@ export class ProgrammesService {
       const programmes = await queryBuilder.getMany();
 
       // find all teams of this zone and total thier zonalpoint
-        
+
       const teams = await this.TeamsService.findAll(['name', 'zone', 'zone.name', 'zone.id']);
 
       const categories = await this.categoryService.findAll(['name', 'id']);
@@ -630,7 +633,7 @@ export class ProgrammesService {
 
       teamsOfZone.forEach(team => {
         const teamWithPoint: teamWithPoint = {
-          totalPercentage : 0,
+          totalPercentage: 0,
           teamName: team.name,
           zoneName: team.zone.name,
           totalPoint: 0,
@@ -649,10 +652,10 @@ export class ProgrammesService {
           programme?.candidateProgramme?.forEach(cp => {
             if (cp.candidate?.team?.name === team.name) {
               teamWithPoint.totalPoint += cp.zonalpoint;
-              if(team.isDegreeHave){
-                teamWithPoint.totalPercentage = (teamWithPoint.totalPoint/386)/100;
-              }else{
-                teamWithPoint.totalPercentage = (teamWithPoint.totalPoint/210)/100;
+              if (team.isDegreeHave) {
+                teamWithPoint.totalPercentage = (teamWithPoint.totalPoint / 386) / 100;
+              } else {
+                teamWithPoint.totalPercentage = (teamWithPoint.totalPoint / 210) / 100;
               }
               teamWithPoint.categoryWisePoint.forEach(categoryWisePoint => {
                 if (categoryWisePoint.categoryName === programme?.category?.name) {
@@ -664,9 +667,9 @@ export class ProgrammesService {
           );
 
 
-          
+
         });
-        
+
         teamsWithPoint.push(teamWithPoint);
 
       });
@@ -687,28 +690,30 @@ export class ProgrammesService {
 
             // checking is candidate already in the topperCandidates array
             const isCandidateExist = topperCandidates.some(
-              candidate => candidate.candidateName === cp?.candidate?.name,
+              candidate => candidate.chestNo === cp?.candidate?.chestNO,
             );
 
             if (isCandidateExist) {
               // add the point to the candidate
               topperCandidates.forEach(candidate => {
-                if (candidate.candidateName === cp?.candidate?.name) {
+                if (candidate.chestNo === cp?.candidate?.chestNO) {
                   candidate.totalPoint += cp?.zonalpoint;
                 }
               });
+            }else{
+              const candidateWithPoint: candidateWithPoint = {
+                candidateName: cp.candidate.name,
+                teamName: cp.candidate.team.name,
+                zoneName: cp.candidate.team.zone.name,
+                totalPoint: cp.zonalpoint,
+                categoryName: programme.category.name,
+                chestNo: cp.candidate.chestNO,
+              };
+  
+              topperCandidates.push(candidateWithPoint);
             }
 
-            const candidateWithPoint: candidateWithPoint = {
-              candidateName: cp.candidate.name,
-              teamName: cp.candidate.team.name,
-              zoneName: cp.candidate.team.zone.name,
-              totalPoint: cp.zonalpoint,
-              categoryName: programme.category.name,
-              chestNo: cp.candidate.chestNO,
-            };
-
-            topperCandidates.push(candidateWithPoint);
+          
           });
         }
 
@@ -733,11 +738,11 @@ export class ProgrammesService {
         });
       });
 
-    
+
       return {
-        programmes : programmes,
-        topTeams : teamsWithPoint,
-        topCandidates : top5Candidates
+        programmes: programmes,
+        topTeams: teamsWithPoint,
+        topCandidates: top5Candidates
       }
 
     } catch (e) {
