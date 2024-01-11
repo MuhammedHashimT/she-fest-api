@@ -92,6 +92,25 @@ export class CandidatesResolver {
     return this.candidatesService.findByNameOrChestNo(name, chestNo, limit || 10, teamName);
   }
 
+  // findByNameOrChestNoInFinal
+  @Query(
+    () =>
+      // total count and candidates seperately
+      SearchCandidate,
+
+    { name: 'searchFinalCandidates' },
+  )
+  searchFinalCandidates(
+    @Args('name', { type: () => String }) name: string,
+    @Args('chestNo', { type: () => String }) chestNo: string,
+    @Args('limit', { type: () => Int, nullable: true }) limit: number,
+    @Args('teamName', { type: () => String, nullable: true }) teamName: string,
+    @Info() info: any,
+  ) {
+    const fields = Object.keys(fieldsProjection(info));
+    return this.candidatesService.findByNameOrChestNoInFinal(name, chestNo, limit || 10, teamName);
+  }
+
   @Query(() => [Category], { name: 'getCategoryBasedToppers' })
   getCategoryBasedToppers() {
     return this.candidatesService.getCategoryBasedToppers();

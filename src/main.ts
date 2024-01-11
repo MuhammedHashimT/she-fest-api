@@ -19,7 +19,7 @@ async function bootstrap() {
   // setting cookie parser
   app.use(cookieParser());
 
-  app.use(json({ limit: '100mb' }));
+  app.use(json({ limit: '10mb' }));
 
   // cors origin
   app.enableCors({

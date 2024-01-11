@@ -215,7 +215,20 @@ export class CandidatesService {
 
   // upload many
 
-  uploadFile(file: Express.Multer.File) {
+  async uploadFile(file: Express.Multer.File, chestNo: string, iamReady: boolean) {
+
+    if (!file || !chestNo) {
+      throw new HttpException(`File or Chest No not found`, HttpStatus.BAD_REQUEST);
+    }
+
+    // check the file cant be more than 1mb
+
+    if (file.size > 1000000) {
+      throw new HttpException(`File size must be less than 1 MB`, HttpStatus.BAD_REQUEST);
+    }
+
+    // upload the file to cloudinary
+
     const cludinaryResponse = new Promise<CloudinaryResponse>((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         (error, result) => {
@@ -226,10 +239,46 @@ export class CandidatesService {
       streamifier.createReadStream(file.buffer).pipe(uploadStream);
     });
 
-    cludinaryResponse.then((data)=>{
-      console.log(data);
-    })
-    
+
+    cludinaryResponse.then(async (data) => {
+      const url = data.secure_url;
+
+      // add url to candidate avatar
+
+      const candidate = await this.candidateRepository.findOneBy({
+        chestNO: chestNo,
+      });
+
+
+      if (!candidate) {
+        throw new HttpException(`Cant find a candidate to add avatar`, HttpStatus.BAD_REQUEST);
+      }
+
+
+      try {
+        const avt = this.candidateRepository.save({
+          ...candidate,
+          avatar: url,
+          iamReady: iamReady
+        });
+        return candidate;
+      } catch (err) {
+        throw new HttpException(
+          'An Error have when updating candidate\'s avatar ',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          { cause: err },
+        );
+      }
+    }).catch((err) => {
+      throw new HttpException(
+        'An Error have when uploading file ' + err,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        { cause: err },
+      );
+    }
+
+    );
+
   }
 
   async findAll(fields: string[]) {
@@ -267,6 +316,54 @@ export class CandidatesService {
         }),
       );
       const candidate = await queryBuilder.getMany();
+      return candidate;
+    } catch (e) {
+      throw new HttpException(
+        'An Error have when finding candidate ',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        { cause: e },
+      );
+    }
+  }
+
+  async findAllFinal(fields: string[]) {
+    const allowedRelations = [
+      'category',
+      'team',
+      'candidateProgrammes',
+      'candidateProgrammes.programme',
+      'team.zone',
+    ];
+
+    // validating fields
+    fields = fieldsValidator(fields, allowedRelations);
+    // checking if fields contains id
+    fields = fieldsIdChecker(fields);
+
+    try {
+      const queryBuilder = this.candidateRepository
+        .createQueryBuilder('candidate')
+        .leftJoinAndSelect('candidate.category', 'category')
+        .leftJoinAndSelect('candidate.team', 'team')
+        .leftJoinAndSelect('team.zone', 'zone')
+        .leftJoinAndSelect('candidate.candidateProgrammes', 'candidateProgrammes')
+        .leftJoinAndSelect('candidateProgrammes.programme', 'programme');
+
+      queryBuilder.select(
+        fields.map(column => {
+          const splitted = column.split('.');
+
+          if (splitted.length > 1) {
+            return `${splitted[splitted.length - 2]}.${splitted[splitted.length - 1]}`;
+          } else {
+            return `candidate.${column}`;
+          }
+        }),
+      );
+      const candidate = await queryBuilder.getMany();
+
+
+
       return candidate;
     } catch (e) {
       throw new HttpException(
@@ -417,7 +514,7 @@ export class CandidatesService {
         where: {
           chestNO,
         },
-        relations: ['category', 'team', 'candidateProgrammes', 'cgp', 'team.zone' , 'candidateProgrammes.zonalgrade' , 'candidateProgrammes.zonalposition' , 'candidateProgrammes.finalgrade' , 'candidateProgrammes.finalposition' , 'candidateProgrammes.programme'],
+        relations: ['category', 'team', 'candidateProgrammes', 'cgp', 'team.zone', 'candidateProgrammes.zonalgrade', 'candidateProgrammes.zonalposition', 'candidateProgrammes.finalgrade', 'candidateProgrammes.finalposition', 'candidateProgrammes.programme'],
       });
 
       if (!candidate) {
@@ -673,6 +770,333 @@ export class CandidatesService {
         totalCandidates = await queryBuilder.getCount();
 
         candidates.push(...(await queryBuilder.getMany()));
+      }
+    }
+
+    return {
+      totalCandidates,
+      candidates,
+    };
+  }
+
+  async findByNameOrChestNoInFinal(name: string, chestNo: string, limit: number, teamName: string = null) {
+    const candidates = [];
+    let totalCandidates = 0;
+
+    // if team name is given then search by team name
+
+    if (teamName) {
+      const team = await this.teamService.findOneByName(teamName, [
+        'id',
+        'name',
+        // 'candidates',
+        'candidates.name',
+        'candidates.chestNO',
+        'candidates.category',
+        'candidates.category.name',
+        'candidates.cgp.programme',
+        'candidates.cgp.programme.name',
+        'candidates.cgp.programme.type',
+        // 'candidates.candidateProgrammes',
+        'candidates.candidateProgrammes.zonalposition',
+        'candidates.candidateProgrammes.finalposition',
+        'candidates.candidateProgrammes.candidatesOfGroup',
+        'candidates.candidateProgrammes.programme',
+        'candidates.candidateProgrammes.programme.name',
+        'candidates.candidateProgrammes.programme.type',
+        'candidates.candidateProgrammes.programme.programCode',
+        'candidates.candidateProgrammes.programme.resultPublished',
+      ]);
+
+      if (!team) {
+        throw new HttpException(`Cant find team with name ${teamName} `, HttpStatus.BAD_REQUEST);
+      }
+
+      // if team found then check the candidates of the team
+
+      const teamCandidates = team.candidates;
+
+      const finalTeamCandidates = teamCandidates.filter((candidate) => {
+        const candidateProgrammes = candidate.candidateProgrammes;
+
+        const finalCp = candidateProgrammes.filter(candidateProgramme => {
+          if (candidateProgramme.zonalposition?.value === 1 || candidateProgramme.zonalposition?.value === 2) {
+            console.log("yse");
+            return candidateProgramme;
+          }
+        }
+        );
+
+        candidate.candidateProgrammes = finalCp || [];
+
+        const isZonalPosition = candidateProgrammes.some(
+          candidateProgramme => candidateProgramme.zonalposition?.value === 1 || candidateProgramme.zonalposition?.value === 2,
+        );
+
+        console.log(isZonalPosition);
+
+
+        if (isZonalPosition) {
+          return true;
+        }
+
+        return false;
+      })
+
+      // if candidates found then search by name or chestNo
+
+      if (finalTeamCandidates) {
+        // if name is given then search by name
+
+        totalCandidates = finalTeamCandidates.length;
+
+        if (name) {
+          const filteredCandidates = finalTeamCandidates.filter(candidate =>
+            candidate.name?.toLocaleLowerCase().includes(name.toLocaleLowerCase()),
+          );
+          // push the candidates to candidates array by limit
+          candidates.push(...filteredCandidates.slice(0, limit));
+        } else if (chestNo) {
+          const filteredCandidates = finalTeamCandidates.filter(candidate =>
+            candidate.chestNO.toLocaleLowerCase()?.includes(chestNo.toLocaleLowerCase()),
+          );
+          // push the candidates to candidates array by limit
+          candidates.push(...filteredCandidates.slice(0, limit));
+        } else {
+          // push the candidates to candidates array by limit
+          candidates.push(...finalTeamCandidates.slice(0, limit));
+        }
+      }
+
+    } else {
+      // if team name is not given then search by name or chestNo
+
+      // if name is given then search by name
+
+      if (name) {
+        const queryBuilder = this.candidateRepository
+          .createQueryBuilder('candidate')
+          .leftJoinAndSelect('candidate.category', 'category')
+          .leftJoinAndSelect('candidate.cgp', 'cgp')
+          .leftJoinAndSelect('cgp.zonalposition', 'zonalpositioncgp')
+          .leftJoinAndSelect('cgp.programme', 'programmecgp')
+          .leftJoinAndSelect('candidate.team', 'team')
+          .leftJoinAndSelect('candidate.candidateProgrammes', 'candidateProgrammes')
+          // where candidateProgrammes.zonalposition.value is 1 or 2
+          .leftJoinAndSelect('candidateProgrammes.zonalposition', 'zonalposition')
+          .leftJoinAndSelect('candidateProgrammes.programme', 'programme')
+          .where('candidate.name LIKE :name', { name: `%${name}%` })
+          .orWhere('candidate.chestNO LIKE :chestNO', { chestNO: `%${name}%` })
+          .take(limit);
+
+        totalCandidates = await queryBuilder.getCount();
+
+        const candidatesData = await queryBuilder.getMany();
+        const candidatesFinal = candidatesData?.map(candidate => {
+
+          const candidateProgrammes = [];
+
+          candidate.cgp?.map(cgp => {
+            candidateProgrammes.push(cgp);
+          })
+
+          candidate.candidateProgrammes?.map(candidateProgramme => {
+            const isAlreadyIn = candidateProgrammes.find(cgp => cgp.id === candidateProgramme.id);
+
+            if (!isAlreadyIn) {
+              candidateProgrammes.push(candidateProgramme);
+            }
+          })
+
+          return {
+            ...candidate,
+            candidateProgrammes
+          }
+        })
+
+        const finalCandidates = candidatesFinal.filter(candidate => {
+          // check all candidate programmes and if any of them have zonalposition 1 or 2 then return true and only return the candidateProgrammes that have with zonalposition 1 or 2
+
+          const candidateProgrammes = candidate.candidateProgrammes;
+
+          const finalCp = candidateProgrammes.filter(candidateProgramme => {
+            if (candidateProgramme.zonalposition?.value === 1 || candidateProgramme.zonalposition?.value === 2) {
+              console.log("yse");
+              return candidateProgramme;
+            }
+          }
+          );
+
+          candidate.candidateProgrammes = finalCp || [];
+
+          const isZonalPosition = candidateProgrammes.some(
+            candidateProgramme => candidateProgramme.zonalposition?.value === 1 || candidateProgramme.zonalposition?.value === 2,
+          );
+
+          console.log(isZonalPosition);
+
+
+          if (isZonalPosition) {
+            return true;
+          }
+
+          return false;
+        }
+        );
+
+        totalCandidates = finalCandidates.length;
+        candidates.push(...finalCandidates);
+      } else if (chestNo) {
+        const queryBuilder = this.candidateRepository
+          .createQueryBuilder('candidate')
+          .leftJoinAndSelect('candidate.cgp', 'cgp')
+          .leftJoinAndSelect('cgp.zonalposition', 'zonalpositioncgp')
+          .leftJoinAndSelect('cgp.programme', 'programmecgp')
+          .leftJoinAndSelect('candidate.category', 'category')
+          .leftJoinAndSelect('candidate.team', 'team')
+          .leftJoinAndSelect('candidate.candidateProgrammes', 'candidateProgrammes')
+          .leftJoinAndSelect('candidateProgrammes.zonalposition', 'zonalposition')
+          .leftJoinAndSelect('candidateProgrammes.programme', 'programme')
+          .where('candidate.name LIKE :name', { name: `%${chestNo}%` })
+          .orWhere('candidate.chestNO LIKE :chestNO', { chestNO: `%${chestNo}%` })
+          .take(limit);
+
+        // total count must be the total candidates not the searched candidates
+
+        totalCandidates = await queryBuilder.getCount();
+
+        const candidatesData = await queryBuilder.getMany();
+        const candidatesFinal = candidatesData?.map(candidate => {
+
+          const candidateProgrammes = [];
+
+          candidate.cgp?.map(cgp => {
+            console.log(cgp);
+
+            candidateProgrammes.push(cgp);
+          })
+
+          candidate.candidateProgrammes?.map(candidateProgramme => {
+            // check if the candidateProgramme is already in the candidateProgrammes
+            const isAlreadyIn = candidateProgrammes.find(cgp => cgp.id === candidateProgramme.id);
+
+            if (!isAlreadyIn) {
+              candidateProgrammes.push(candidateProgramme);
+            }
+          })
+
+          return {
+            ...candidate,
+            candidateProgrammes
+          }
+        })
+
+        const finalCandidates = candidatesFinal.filter(candidate => {
+          // check all candidate programmes and if any of them have zonalposition 1 or 2 then return true and only return the candidateProgrammes that have with zonalposition 1 or 2
+
+
+
+          const candidateProgrammes = candidate.candidateProgrammes;
+
+          // console.log(candidateProgrammes);
+
+
+          const finalCp = candidateProgrammes.filter(candidateProgramme => {
+            if (candidateProgramme.zonalposition?.value === 1 || candidateProgramme.zonalposition?.value === 2) {
+              return candidateProgramme;
+            }
+          }
+          );
+
+          candidate.candidateProgrammes = finalCp;
+
+          const isZonalPosition = candidateProgrammes.some(
+            candidateProgramme => candidateProgramme.zonalposition?.value === 1 || candidateProgramme.zonalposition?.value === 2,
+          );
+
+          if (isZonalPosition) {
+            return true;
+          }
+
+          return false;
+        }
+        );
+
+        totalCandidates = finalCandidates.length;
+        candidates.push(...finalCandidates);
+      } else {
+        // if name and chestNo is not given then return all candidates
+
+        const queryBuilder = this.candidateRepository
+          .createQueryBuilder('candidate')
+          .leftJoinAndSelect('candidate.cgp', 'cgp')
+          .leftJoinAndSelect('cgp.zonalposition', 'zonalpositioncgp')
+          .leftJoinAndSelect('cgp.programme', 'programmecgp')
+          .leftJoinAndSelect('candidate.category', 'category')
+          .leftJoinAndSelect('candidate.team', 'team')
+          .leftJoinAndSelect('candidate.candidateProgrammes', 'candidateProgrammes')
+          .leftJoinAndSelect('candidateProgrammes.zonalposition', 'zonalposition')
+          .leftJoinAndSelect('candidateProgrammes.programme', 'programme')
+        // .take(limit);
+
+        // total count must be the total candidates not the searched candidates
+
+
+
+        const candidatesData = await queryBuilder.getMany();
+        const candidatesFinal = candidatesData?.map(candidate => {
+
+          const candidateProgrammes = [];
+
+          candidate.cgp?.map(cgp => {
+            candidateProgrammes.push(cgp);
+          })
+
+          candidate.candidateProgrammes?.map(candidateProgramme => {
+            const isAlreadyIn = candidateProgrammes.find(cgp => cgp.id === candidateProgramme.id);
+
+            if (!isAlreadyIn) {
+              candidateProgrammes.push(candidateProgramme);
+            }
+          })
+
+          return {
+            ...candidate,
+            candidateProgrammes
+          }
+        })
+
+
+        const finalCandidates = candidatesFinal.filter(candidate => {
+          // check all candidate programmes and if any of them have zonalposition 1 or 2 then return true and only return the candidateProgrammes that have with zonalposition 1 or 2
+
+          const candidateProgrammes = candidate.candidateProgrammes;
+
+          const finalCp = candidateProgrammes.filter(candidateProgramme => {
+            if (candidateProgramme.zonalposition?.value === 1 || candidateProgramme.zonalposition?.value === 2) {
+              return candidateProgramme;
+            }
+          }
+          );
+
+          candidate.candidateProgrammes = finalCp;
+
+          const isZonalPosition = candidateProgrammes.some(
+            candidateProgramme => candidateProgramme.zonalposition?.value === 1 || candidateProgramme.zonalposition?.value === 2,
+          );
+
+          if (isZonalPosition) {
+            return true;
+          }
+
+          return false;
+        }
+        );
+
+        totalCandidates = finalCandidates.length;
+
+
+        candidates.push(...finalCandidates);
       }
     }
 

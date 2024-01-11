@@ -47,6 +47,13 @@ export class ProgrammesResolver {
     return this.programmesService.findAll(fields);
   }
 
+  @Query(() => [Programme], { name: 'finalprogrammes' })
+  async findAllFinal(@Info() info: any,  @Args('api_key') api_key: string,) {
+    await this.credentialsService.ValidateApiKey(api_key);
+    const fields = Object.keys(fieldsProjection(info));
+    return this.programmesService.findAllFinal(fields);
+  }
+
   @Query(() => Programme, { name: 'programme' })
   async findOne(@Args('id', { type: () => Int }) id: number, @Args('api_key') api_key: string, @Info() info: any) {
     await this.credentialsService.ValidateApiKey(api_key);

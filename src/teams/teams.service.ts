@@ -238,6 +238,8 @@ export class TeamsService {
       'candidates',
       'candidates.cgp',
       'candidates.candidateProgrammes',
+      'candidates.candidateProgrammes.zonalposition',
+      'candidates.candidateProgrammes.finalposition',
       'candidates.category',
       'candidates.candidateProgrammes.programme',
       'zone'
@@ -258,6 +260,7 @@ export class TeamsService {
           'candidates.candidateProgrammes',
           'candidates.category',
           'candidates.candidateProgrammes.programme',
+          'candidates.candidateProgrammes.zonalposition',
           'zone'
         ],
       })
@@ -278,7 +281,12 @@ export class TeamsService {
         })
 
         candidate.candidateProgrammes?.map(candidateProgramme => {
-          candidateProgrammes.push(candidateProgramme);
+          // check if the candidateProgramme is already in the candidateProgrammes
+          const isAlreadyIn = candidateProgrammes.find(cgp => cgp.id === candidateProgramme.id);
+
+          if (!isAlreadyIn) {
+            candidateProgrammes.push(candidateProgramme);
+          }
         })
 
         return {

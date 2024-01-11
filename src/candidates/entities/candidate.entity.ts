@@ -39,6 +39,9 @@ export class Candidate {
   @Field({ nullable: true })
   avatar: string;
 
+  @Column({ nullable: true  , default : false} )
+  @Field( () => Boolean , { nullable: false } )
+  iamReady: boolean;
 
   @Column({ nullable: true })
   @Field({ nullable: true })
@@ -67,6 +70,7 @@ export class Candidate {
   @ManyToMany(() => CandidateProgramme, candidateProgramme => candidateProgramme.candidatesOfGroup)
   @Field(() => [CandidateProgramme], { nullable: true })
   cgp: CandidateProgramme[];
+
 
 
   // Dates
