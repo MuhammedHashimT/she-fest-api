@@ -887,9 +887,8 @@ export class CandidatesService {
           .leftJoinAndSelect('candidateProgrammes.programme', 'programme')
           .where('candidate.name LIKE :name', { name: `%${name}%` })
           .orWhere('candidate.chestNO LIKE :chestNO', { chestNO: `%${name}%` })
-          .take(limit);
+          // .take(limit);
 
-        totalCandidates = await queryBuilder.getCount();
 
         const candidatesData = await queryBuilder.getMany();
         const candidatesFinal = candidatesData?.map(candidate => {
@@ -959,7 +958,7 @@ export class CandidatesService {
           .leftJoinAndSelect('candidateProgrammes.programme', 'programme')
           .where('candidate.name LIKE :name', { name: `%${chestNo}%` })
           .orWhere('candidate.chestNO LIKE :chestNO', { chestNO: `%${chestNo}%` })
-          .take(limit);
+          // .take(limit);
 
         // total count must be the total candidates not the searched candidates
 
