@@ -18,6 +18,10 @@ import { CategorySettings } from 'src/category-settings/entities/category-settin
 import { CategorySettingsService } from 'src/category-settings/category-settings.service';
 import { ProgrammesService } from 'src/programmes/programmes.service';
 import { CandidateProgramme } from 'src/candidate-programme/entities/candidate-programme.entity';
+import { CloudinaryResponse } from 'src/cloudinary/cloudinary-response';
+import { v2 as cloudinary } from 'cloudinary';
+
+const streamifier = require('streamifier');
 // import { drive } from 'src/utils/googleApi.auth';
 
 @Injectable()
@@ -207,6 +211,25 @@ export class CandidatesService {
         { cause: e },
       );
     }
+  }
+
+  // upload many
+
+  uploadFile(file: Express.Multer.File) {
+    const cludinaryResponse = new Promise<CloudinaryResponse>((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        (error, result) => {
+          if (error) return reject(error);
+          resolve(result);
+        },
+      );
+      streamifier.createReadStream(file.buffer).pipe(uploadStream);
+    });
+
+    cludinaryResponse.then((data)=>{
+      console.log(data);
+    })
+    
   }
 
   async findAll(fields: string[]) {

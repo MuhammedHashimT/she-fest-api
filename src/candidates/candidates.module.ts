@@ -9,6 +9,8 @@ import { CredentialsModule } from 'src/credentials/credentials.module';
 import { CandidateProgrammeModule } from 'src/candidate-programme/candidate-programme.module';
 import { CategorySettingsModule } from 'src/category-settings/category-settings.module';
 import { ProgrammesModule } from 'src/programmes/programmes.module';
+import { CandidatesController } from './candidates.controller';
+import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -19,8 +21,10 @@ import { ProgrammesModule } from 'src/programmes/programmes.module';
     CategorySettingsModule ,
     ProgrammesModule,
     forwardRef(() => CandidateProgrammeModule),
+    CloudinaryModule
   ],
   providers: [CandidatesResolver, CandidatesService],
+  controllers : [CandidatesController],
   exports: [CandidatesService],
 })
 export class CandidatesModule {}

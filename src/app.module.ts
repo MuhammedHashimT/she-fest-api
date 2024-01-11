@@ -20,6 +20,7 @@ import { CustomContextProvider } from './utils/custom';
 import { FeedsModule } from './feeds/feeds.module';
 import { CustomSettingsModule } from './custom-settings/custom-settings.module';
 import { ZoneModule } from './zone/zone.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -107,6 +108,7 @@ import { ZoneModule } from './zone/zone.module';
     FeedsModule,
     CustomSettingsModule,
     ZoneModule,
+    CloudinaryModule
   ],
   controllers: [AppController],
   providers: [AppService , CustomContextProvider],

@@ -35,6 +35,10 @@ export class Candidate {
   @Field({ nullable: true })
   chestNO: string;
 
+  @Column({ nullable: true })
+  @Field({ nullable: true })
+  avatar: string;
+
 
   @Column({ nullable: true })
   @Field({ nullable: true })
