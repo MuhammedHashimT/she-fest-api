@@ -256,7 +256,15 @@ export class CandidatesService {
 
 
       try {
-        const avt = this.candidateRepository.save({
+
+        if (typeof iamReady !== 'boolean') {
+          Boolean(iamReady);
+        }
+
+        console.log(iamReady);
+        
+
+        const avt = await this.candidateRepository.save({
           ...candidate,
           avatar: url,
           iamReady: iamReady
