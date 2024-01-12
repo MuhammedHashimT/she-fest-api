@@ -215,83 +215,137 @@ export class CandidatesService {
 
   // upload many
 
+  // async uploadFile(file: Express.Multer.File, chestNo: string, iamReady: boolean) {
+
+  //   if (!file || !chestNo) {
+  //     throw new HttpException(`File or Chest No not found`, HttpStatus.BAD_REQUEST);
+  //   }
+
+  //   // check the file cant be more than 1mb
+
+  //   if (file.size > 1000000) {
+  //     throw new HttpException(`File size must be less than 1 MB`, HttpStatus.BAD_REQUEST);
+  //   }
+
+  //   // upload the file to cloudinary
+
+  //   const cludinaryResponse = new Promise<CloudinaryResponse>((resolve, reject) => {
+  //     const uploadStream = cloudinary.uploader.upload_stream(
+  //       (error, result) => {
+  //         if (error) return reject(error);
+  //         resolve(result);
+  //       },
+  //     );
+  //     streamifier.createReadStream(file.buffer).pipe(uploadStream);
+  //   });
+
+
+  //   cludinaryResponse.then(async (data) => {
+  //     const url = data.secure_url;
+
+  //     // add url to candidate avatar
+
+  //     const candidate = await this.candidateRepository.findOneBy({
+  //       chestNO: chestNo,
+  //     });
+
+
+  //     if (!candidate) {
+  //       throw new HttpException(`Cant find a candidate to add avatar`, HttpStatus.BAD_REQUEST);
+  //     }
+
+
+  //     try {
+
+  //       if (typeof iamReady !== 'boolean') {
+  //         console.log("not boolean");
+          
+  //         iamReady = iamReady == "true" ? true : false;
+  //       }
+        
+  //       console.log(iamReady);
+        
+  //       const avt = await this.candidateRepository.save({
+  //         ...candidate,
+  //         avatar: url,
+  //         iamReady: iamReady,
+  //       });
+        
+  //       console.log(avt);
+        
+  //       return avt;
+  //     } catch (err) {
+  //       throw new HttpException(
+  //         'An Error have when updating candidate\'s avatar ',
+  //         HttpStatus.INTERNAL_SERVER_ERROR,
+  //         { cause: err },
+  //       );
+  //     }
+  //   }).catch((err) => {
+  //     throw new HttpException(
+  //       'An Error have when uploading file ' + err,
+  //       HttpStatus.INTERNAL_SERVER_ERROR,
+  //       { cause: err },
+  //     );
+  //   }
+
+  //   );
+
+  // }
+
   async uploadFile(file: Express.Multer.File, chestNo: string, iamReady: boolean) {
-
-    if (!file || !chestNo) {
-      throw new HttpException(`File or Chest No not found`, HttpStatus.BAD_REQUEST);
-    }
-
-    // check the file cant be more than 1mb
-
-    if (file.size > 1000000) {
-      throw new HttpException(`File size must be less than 1 MB`, HttpStatus.BAD_REQUEST);
-    }
-
-    // upload the file to cloudinary
-
-    const cludinaryResponse = new Promise<CloudinaryResponse>((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        (error, result) => {
-          if (error) return reject(error);
-          resolve(result);
-        },
-      );
-      streamifier.createReadStream(file.buffer).pipe(uploadStream);
-    });
-
-
-    cludinaryResponse.then(async (data) => {
+    try {
+      if (!file || !chestNo) {
+        throw new HttpException(`File or Chest No not found`, HttpStatus.BAD_REQUEST);
+      }
+  
+      // Check the file size
+      if (file.size > 1000000) {
+        throw new HttpException(`File size must be less than 1 MB`, HttpStatus.BAD_REQUEST);
+      }
+  
+      // Upload the file to Cloudinary
+      const data = await new Promise<CloudinaryResponse>((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream((error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        });
+        streamifier.createReadStream(file.buffer).pipe(uploadStream);
+      });
+  
       const url = data.secure_url;
-
-      // add url to candidate avatar
-
+  
+      // Add the URL to candidate avatar
       const candidate = await this.candidateRepository.findOneBy({
         chestNO: chestNo,
       });
-
-
+  
       if (!candidate) {
-        throw new HttpException(`Cant find a candidate to add avatar`, HttpStatus.BAD_REQUEST);
+        throw new HttpException(`Cannot find a candidate to add an avatar`, HttpStatus.BAD_REQUEST);
       }
-
-
-      try {
-
-        if (typeof iamReady !== 'boolean') {
-          console.log("not boolean");
-          
-          iamReady = iamReady == "true" ? true : false;
-        }
-        
-        console.log(iamReady);
-        
-        const avt = await this.candidateRepository.save({
-          ...candidate,
-          avatar: url,
-          iamReady: iamReady,
-        });
-        
-        console.log(avt);
-        
-        return avt;
-      } catch (err) {
-        throw new HttpException(
-          'An Error have when updating candidate\'s avatar ',
-          HttpStatus.INTERNAL_SERVER_ERROR,
-          { cause: err },
-        );
+  
+      if (typeof iamReady !== 'boolean') {
+        console.log("not boolean");
+        iamReady = iamReady == "true" 
       }
-    }).catch((err) => {
-      throw new HttpException(
-        'An Error have when uploading file ' + err,
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        { cause: err },
-      );
+  
+      console.log(iamReady);
+  
+      const avt = await this.candidateRepository.save({
+        ...candidate,
+        avatar: url,
+        iamReady: iamReady,
+      });
+  
+      console.log(avt);
+  
+      return avt;
+    } catch (err) {
+      console.error('An error occurred:', err);
+      throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
     }
-
-    );
-
   }
+  
 
   async findAll(fields: string[]) {
     const allowedRelations = [

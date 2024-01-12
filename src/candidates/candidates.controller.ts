@@ -19,8 +19,11 @@ import { CandidatesService } from './candidates.service';
   
     @Post('avatar')
     @UseInterceptors(FileInterceptor('file'))
-    uploadImage(@UploadedFile() file: Express.Multer.File , @Body('chestNo') chestNo: string , @Body('IamReady') iamReady: boolean ) {
-      return this.candidateService.uploadFile(file , chestNo , iamReady);
+   async uploadImage(@UploadedFile() file: Express.Multer.File , @Body('chestNo') chestNo: string , @Body('IamReady') iamReady: boolean ) {
+      const cdt = await this.candidateService.uploadFile(file , chestNo , iamReady);
+      console.log(cdt);
+      return cdt;
+      
     }
   
     @Post('uploads')
