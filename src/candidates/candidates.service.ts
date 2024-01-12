@@ -295,14 +295,9 @@ export class CandidatesService {
 
   async uploadFile(file: Express.Multer.File, chestNo: string, iamReady: boolean) {
     try {
-      if (!file || !chestNo) {
-        throw new HttpException(`File or Chest No not found`, HttpStatus.BAD_REQUEST);
-      }
+
   
-      // Check the file size
-      if (file.size > 1000000) {
-        throw new HttpException(`File size must be less than 1 MB`, HttpStatus.BAD_REQUEST);
-      }
+     
   
       // Upload the file to Cloudinary
       const data = await new Promise<CloudinaryResponse>((resolve, reject) => {
