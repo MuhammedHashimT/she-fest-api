@@ -29,11 +29,11 @@ import { CandidatesService } from './candidates.service';
 
 
      // Check the file size
-     if (file.size > 1000000) {
+     if (file?.size > 1000000) {
       throw new HttpException(`File size must be less than 1 MB`, HttpStatus.BAD_REQUEST);
     }
 
-      const cdt =  this.candidateService.uploadFile(file , chestNo , iamReady , iNeedFoodAndAccommodation);
+      const cdt = await  this.candidateService.uploadFile(file , chestNo , iamReady , iNeedFoodAndAccommodation);
       console.log(cdt);
       return cdt;
       

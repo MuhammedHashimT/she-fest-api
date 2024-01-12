@@ -297,15 +297,18 @@ export class CandidatesService {
     try {
   
       // Upload the file to Cloudinary
-      const data = await new Promise<CloudinaryResponse>((resolve, reject) => {
+      let data = null;
+      if(file){
+       data =  await new Promise<CloudinaryResponse>((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream((error, result) => {
           if (error) reject(error);
           else resolve(result);
         });
         streamifier.createReadStream(file.buffer).pipe(uploadStream);
       });
+    }
   
-      let url = data.secure_url;
+      let url = data?.secure_url;
   
       // Add the URL to candidate avatar
       const candidate = await this.candidateRepository.findOneBy({
