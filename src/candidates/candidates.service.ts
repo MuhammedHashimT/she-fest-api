@@ -13,7 +13,7 @@ import { Team } from 'src/teams/entities/team.entity';
 import { CreateInput } from './dto/create-input.dto';
 import { CredentialsService } from 'src/credentials/credentials.service';
 import { fieldsIdChecker, fieldsValidator } from 'src/utils/util';
-import { Type } from 'src/programmes/entities/programme.entity';
+import { Mode, Type } from 'src/programmes/entities/programme.entity';
 import { CategorySettings } from 'src/category-settings/entities/category-setting.entity';
 import { CategorySettingsService } from 'src/category-settings/category-settings.service';
 import { ProgrammesService } from 'src/programmes/programmes.service';
@@ -259,20 +259,20 @@ export class CandidatesService {
 
   //       if (typeof iamReady !== 'boolean') {
   //         console.log("not boolean");
-          
+
   //         iamReady = iamReady == "true" ? true : false;
   //       }
-        
+
   //       console.log(iamReady);
-        
+
   //       const avt = await this.candidateRepository.save({
   //         ...candidate,
   //         avatar: url,
   //         iamReady: iamReady,
   //       });
-        
+
   //       console.log(avt);
-        
+
   //       return avt;
   //     } catch (err) {
   //       throw new HttpException(
@@ -293,64 +293,64 @@ export class CandidatesService {
 
   // }
 
-  async uploadFile(file: Express.Multer.File, chestNo: string, iamReady: boolean , iNeedFoodAndAccommodation: boolean) {
+  async uploadFile(file: Express.Multer.File, chestNo: string, iamReady: boolean, iNeedFoodAndAccommodation: boolean) {
     try {
-  
+
       // Upload the file to Cloudinary
       let data = null;
-      if(file){
-       data =  await new Promise<CloudinaryResponse>((resolve, reject) => {
-        const uploadStream = cloudinary.uploader.upload_stream((error, result) => {
-          if (error) reject(error);
-          else resolve(result);
+      if (file) {
+        data = await new Promise<CloudinaryResponse>((resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream((error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          });
+          streamifier.createReadStream(file.buffer).pipe(uploadStream);
         });
-        streamifier.createReadStream(file.buffer).pipe(uploadStream);
-      });
-    }
-  
+      }
+
       let url = data?.secure_url;
-  
+
       // Add the URL to candidate avatar
       const candidate = await this.candidateRepository.findOneBy({
         chestNO: chestNo,
       });
 
-      if(!file){
+      if (!file) {
         url = candidate?.avatar;
       }
-  
+
       if (!candidate) {
         throw new HttpException(`Cannot find a candidate to add an avatar`, HttpStatus.BAD_REQUEST);
       }
-  
+
       if (typeof iamReady !== 'boolean') {
         console.log("not boolean");
-        iamReady = iamReady == "true" 
+        iamReady = iamReady == "true"
       }
 
       if (typeof iNeedFoodAndAccommodation !== 'boolean') {
         console.log("not boolean");
-        iNeedFoodAndAccommodation = iNeedFoodAndAccommodation == "true" 
+        iNeedFoodAndAccommodation = iNeedFoodAndAccommodation == "true"
       }
-  
+
       console.log(iamReady);
-  
+
       const avt = await this.candidateRepository.save({
         ...candidate,
         avatar: url,
         iamReady: iamReady,
         iNeedFoodAndAccommodation: iNeedFoodAndAccommodation,
       });
-  
+
       console.log(avt);
-  
+
       return avt;
     } catch (err) {
       console.error('An error occurred:', err);
       throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
-  
+
 
   async findAll(fields: string[]) {
     const allowedRelations = [
@@ -890,19 +890,33 @@ export class CandidatesService {
       const finalTeamCandidates = teamCandidates.filter((candidate) => {
         const candidateProgrammes = candidate.candidateProgrammes;
 
-        const finalCp = candidateProgrammes.filter(candidateProgramme => {
-          if (candidateProgramme.zonalposition?.value === 1 || candidateProgramme.zonalposition?.value === 2) {
-            console.log("yse");
-            return candidateProgramme;
+        const finalCp = candidateProgrammes.filter((candidateProgramme: CandidateProgramme) => {
+          if (candidateProgramme.programme.mode === Mode.STAGE) {
+            return candidateProgramme.zonalposition?.value <= 2;
+          } else if (
+            candidateProgramme.programme.name.toLocaleUpperCase() === "CALLIGRAPHY".toLocaleUpperCase()
+          ) {
+            return candidateProgramme.zonalposition?.value <= 1;
+          } else {
+            return false; // Handle the case where none of the conditions match
           }
         }
         );
 
         candidate.candidateProgrammes = finalCp || [];
 
-        const isZonalPosition = candidateProgrammes.some(
-          candidateProgramme => candidateProgramme.zonalposition?.value === 1 || candidateProgramme.zonalposition?.value === 2,
-        );
+        const isZonalPosition = candidateProgrammes.some(candidateProgramme => {
+          if (candidateProgramme.programme.mode === Mode.STAGE) {
+            return candidateProgramme.zonalposition?.value <= 2;
+          } else if (
+            candidateProgramme.programme.name.toLocaleUpperCase() === "CALLIGRAPHY".toLocaleUpperCase()
+          ) {
+            return candidateProgramme.zonalposition?.value <= 1;
+          } else {
+            return false; // Handle the case where none of the conditions match
+          }
+        });
+
 
         console.log(isZonalPosition);
 
@@ -958,7 +972,7 @@ export class CandidatesService {
           .leftJoinAndSelect('candidateProgrammes.programme', 'programme')
           .where('candidate.name LIKE :name', { name: `%${name}%` })
           .orWhere('candidate.chestNO LIKE :chestNO', { chestNO: `%${name}%` })
-          // .take(limit);
+        // .take(limit);
 
 
         const candidatesData = await queryBuilder.getMany();
@@ -990,18 +1004,32 @@ export class CandidatesService {
           const candidateProgrammes = candidate.candidateProgrammes;
 
           const finalCp = candidateProgrammes.filter(candidateProgramme => {
-            if (candidateProgramme.zonalposition?.value === 1 || candidateProgramme.zonalposition?.value === 2) {
-              console.log("yse");
-              return candidateProgramme;
+            if (candidateProgramme.programme.mode === Mode.STAGE) {
+              return candidateProgramme.zonalposition?.value <= 2;
+            } else if (
+              candidateProgramme.programme.name.toLocaleUpperCase() === "CALLIGRAPHY".toLocaleUpperCase()
+            ) {
+              return candidateProgramme.zonalposition?.value <= 1;
+            } else {
+              return false; // Handle the case where none of the conditions match
             }
           }
           );
 
           candidate.candidateProgrammes = finalCp || [];
 
-          const isZonalPosition = candidateProgrammes.some(
-            candidateProgramme => candidateProgramme.zonalposition?.value === 1 || candidateProgramme.zonalposition?.value === 2,
-          );
+          const isZonalPosition = candidateProgrammes.some(candidateProgramme => {
+            if (candidateProgramme.programme.mode === Mode.STAGE) {
+              return candidateProgramme.zonalposition?.value <= 2;
+            } else if (
+              candidateProgramme.programme.name.toLocaleUpperCase() === "CALLIGRAPHY".toLocaleUpperCase()
+            ) {
+              return candidateProgramme.zonalposition?.value <= 1;
+            } else {
+              return false; // Handle the case where none of the conditions match
+            }
+          });
+
 
           console.log(isZonalPosition);
 
@@ -1029,7 +1057,7 @@ export class CandidatesService {
           .leftJoinAndSelect('candidateProgrammes.programme', 'programme')
           .where('candidate.name LIKE :name', { name: `%${chestNo}%` })
           .orWhere('candidate.chestNO LIKE :chestNO', { chestNO: `%${chestNo}%` })
-          // .take(limit);
+        // .take(limit);
 
         // total count must be the total candidates not the searched candidates
 
@@ -1072,17 +1100,32 @@ export class CandidatesService {
 
 
           const finalCp = candidateProgrammes.filter(candidateProgramme => {
-            if (candidateProgramme.zonalposition?.value === 1 || candidateProgramme.zonalposition?.value === 2) {
-              return candidateProgramme;
+            if (candidateProgramme.programme.mode === Mode.STAGE) {
+              return candidateProgramme.zonalposition?.value <= 2;
+            } else if (
+              candidateProgramme.programme.name.toLocaleUpperCase() === "CALLIGRAPHY".toLocaleUpperCase()
+            ) {
+              return candidateProgramme.zonalposition?.value <= 1;
+            } else {
+              return false; // Handle the case where none of the conditions match
             }
           }
           );
 
           candidate.candidateProgrammes = finalCp;
 
-          const isZonalPosition = candidateProgrammes.some(
-            candidateProgramme => candidateProgramme.zonalposition?.value === 1 || candidateProgramme.zonalposition?.value === 2,
-          );
+          const isZonalPosition = candidateProgrammes.some(candidateProgramme => {
+            if (candidateProgramme.programme.mode === Mode.STAGE) {
+              return candidateProgramme.zonalposition?.value <= 2;
+            } else if (
+              candidateProgramme.programme.name.toLocaleUpperCase() === "CALLIGRAPHY".toLocaleUpperCase()
+            ) {
+              return candidateProgramme.zonalposition?.value <= 1;
+            } else {
+              return false; // Handle the case where none of the conditions match
+            }
+          });
+
 
           if (isZonalPosition) {
             return true;
@@ -1143,17 +1186,32 @@ export class CandidatesService {
           const candidateProgrammes = candidate.candidateProgrammes;
 
           const finalCp = candidateProgrammes.filter(candidateProgramme => {
-            if (candidateProgramme.zonalposition?.value === 1 || candidateProgramme.zonalposition?.value === 2) {
-              return candidateProgramme;
+            if (candidateProgramme.programme.mode === Mode.STAGE) {
+              return candidateProgramme.zonalposition?.value <= 2;
+            } else if (
+              candidateProgramme.programme.name.toLocaleUpperCase() === "CALLIGRAPHY".toLocaleUpperCase()
+            ) {
+              return candidateProgramme.zonalposition?.value <= 1;
+            } else {
+              return false; // Handle the case where none of the conditions match
             }
           }
           );
 
           candidate.candidateProgrammes = finalCp;
 
-          const isZonalPosition = candidateProgrammes.some(
-            candidateProgramme => candidateProgramme.zonalposition?.value === 1 || candidateProgramme.zonalposition?.value === 2,
-          );
+          const isZonalPosition = candidateProgrammes.some(candidateProgramme => {
+            if (candidateProgramme.programme.mode === Mode.STAGE) {
+              return candidateProgramme.zonalposition?.value <= 2;
+            } else if (
+              candidateProgramme.programme.name.toLocaleUpperCase() === "CALLIGRAPHY".toLocaleUpperCase()
+            ) {
+              return candidateProgramme.zonalposition?.value <= 1;
+            } else {
+              return false; // Handle the case where none of the conditions match
+            }
+          });
+
 
           if (isZonalPosition) {
             return true;

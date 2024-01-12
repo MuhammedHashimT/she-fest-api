@@ -345,7 +345,11 @@ export class ProgrammesService {
       // only return the candidateProgramme which have zonalposition.value < 2
 
       programme.forEach(programme => {
-        programme.candidateProgramme = programme.candidateProgramme.filter(cp => cp.zonalposition?.value <= 2);
+        programme.candidateProgramme = programme.candidateProgramme.filter(cp => {if (programme.mode === Mode.STAGE) {
+          return cp.zonalposition?.value <= 2;
+        } else  {
+          return cp.zonalposition?.value <= 1;
+        }});
       });
 
       return programme;
