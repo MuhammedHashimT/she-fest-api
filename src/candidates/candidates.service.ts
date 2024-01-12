@@ -258,18 +258,22 @@ export class CandidatesService {
       try {
 
         if (typeof iamReady !== 'boolean') {
-          Boolean(iamReady);
+          console.log("not boolean");
+          
+          iamReady = iamReady == "true" ? true : false;
         }
-
+        
         console.log(iamReady);
         
-
         const avt = await this.candidateRepository.save({
           ...candidate,
           avatar: url,
-          iamReady: iamReady
+          iamReady: iamReady,
         });
-        return candidate;
+        
+        console.log(avt);
+        
+        return avt;
       } catch (err) {
         throw new HttpException(
           'An Error have when updating candidate\'s avatar ',
