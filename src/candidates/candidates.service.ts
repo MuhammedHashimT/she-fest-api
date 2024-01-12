@@ -293,11 +293,8 @@ export class CandidatesService {
 
   // }
 
-  async uploadFile(file: Express.Multer.File, chestNo: string, iamReady: boolean) {
+  async uploadFile(file: Express.Multer.File, chestNo: string, iamReady: boolean , iNeedFoodAndAccommodation: boolean) {
     try {
-
-  
-     
   
       // Upload the file to Cloudinary
       const data = await new Promise<CloudinaryResponse>((resolve, reject) => {
@@ -308,12 +305,16 @@ export class CandidatesService {
         streamifier.createReadStream(file.buffer).pipe(uploadStream);
       });
   
-      const url = data.secure_url;
+      let url = data.secure_url;
   
       // Add the URL to candidate avatar
       const candidate = await this.candidateRepository.findOneBy({
         chestNO: chestNo,
       });
+
+      if(!file){
+        url = candidate?.avatar;
+      }
   
       if (!candidate) {
         throw new HttpException(`Cannot find a candidate to add an avatar`, HttpStatus.BAD_REQUEST);
@@ -323,6 +324,11 @@ export class CandidatesService {
         console.log("not boolean");
         iamReady = iamReady == "true" 
       }
+
+      if (typeof iNeedFoodAndAccommodation !== 'boolean') {
+        console.log("not boolean");
+        iNeedFoodAndAccommodation = iNeedFoodAndAccommodation == "true" 
+      }
   
       console.log(iamReady);
   
@@ -330,6 +336,7 @@ export class CandidatesService {
         ...candidate,
         avatar: url,
         iamReady: iamReady,
+        iNeedFoodAndAccommodation: iNeedFoodAndAccommodation,
       });
   
       console.log(avt);

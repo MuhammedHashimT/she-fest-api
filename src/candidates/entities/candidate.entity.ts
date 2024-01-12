@@ -43,6 +43,10 @@ export class Candidate {
   @Field( () => Boolean , { nullable: false } )
   iamReady: boolean;
 
+  @Column({ nullable: true  , default : false} )
+  @Field( () => Boolean , { nullable: false } )
+  iNeedFoodAndAccommodation: boolean;
+
   @Column({ nullable: true })
   @Field({ nullable: true })
   individualPoint: number;

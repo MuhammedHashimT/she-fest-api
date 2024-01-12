@@ -21,18 +21,19 @@ import { CandidatesService } from './candidates.service';
   
     @Post('avatar')
     @UseInterceptors(FileInterceptor('file'))
-   async uploadImage(@UploadedFile() file: Express.Multer.File , @Body('chestNo') chestNo: string , @Body('IamReady') iamReady: boolean ) {
-
-    if (!file || !chestNo) {
-      throw new HttpException(`File or Chest No not found`, HttpStatus.BAD_REQUEST);
+   async uploadImage(@UploadedFile() file: Express.Multer.File , @Body('chestNo') chestNo: string , @Body('IamReady') iamReady: boolean , @Body('iNeedFoodAndAccommodation') iNeedFoodAndAccommodation: boolean  ) {
+    if ( !chestNo) {
+      throw new HttpException(`Chest No not found`, HttpStatus.BAD_REQUEST);
     }
-    
+
+
+
      // Check the file size
      if (file.size > 1000000) {
       throw new HttpException(`File size must be less than 1 MB`, HttpStatus.BAD_REQUEST);
     }
 
-      const cdt =  this.candidateService.uploadFile(file , chestNo , iamReady);
+      const cdt =  this.candidateService.uploadFile(file , chestNo , iamReady , iNeedFoodAndAccommodation);
       console.log(cdt);
       return cdt;
       
