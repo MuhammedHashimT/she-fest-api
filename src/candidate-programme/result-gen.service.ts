@@ -175,9 +175,15 @@ export class ResultGenService {
     const candidatesOfProgramme: CandidateProgramme[] =
       await this.candidateProgrammeService.getCandidatesOfProgramme(programCode);
 
+    const programme = await this.programmeService.findOneByCode(programCode);
+
     const finalCandidates: CandidateProgramme[] = candidatesOfProgramme.filter(
       (candidateProgramme: CandidateProgramme) => {
-        return candidateProgramme.zonalposition;
+        if (programme.mode == Mode.STAGE) {
+          return candidateProgramme.zonalposition.value <= 2
+        } else {
+          return candidateProgramme.zonalposition.value == 1
+        }
       },
     );
 
@@ -557,7 +563,7 @@ export class ResultGenService {
 
     let candidatesOfProgramme: CandidateProgramme[] = programme.candidateProgramme.filter(
       (candidateProgramme: CandidateProgramme) => {
-        if (programme.mode == Mode.STAGE || programme.name.toUpperCase() == 'CALLIGRAPHY') {
+        if (programme.mode == Mode.STAGE) {
           return candidateProgramme.zonalposition.value <= 2
         } else {
           return candidateProgramme.zonalposition.value == 1

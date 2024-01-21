@@ -14,6 +14,7 @@ import { createInput } from './dto/create-inputs.inputs';
 import { fieldsIdChecker, fieldsValidator, isDateValid } from 'src/utils/util';
 import { TeamsService } from 'src/teams/teams.service';
 import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
+import { ZoneService } from 'src/zone/zone.service';
 
 @ObjectType()
 export class CategoryWisePoint {
@@ -53,6 +54,16 @@ export class candidateWithPoint {
   categoryName: string;
 };
 
+@ObjectType()
+export class zonesWithPoint {
+  @Field()
+  name: string;
+  @Field(() => Int)
+  totalPoint: number;
+  @Field(() => [CategoryWisePoint])
+  categoryWisePoint: CategoryWisePoint[]
+};
+
 @Injectable()
 export class ProgrammesService {
   constructor(
@@ -61,6 +72,7 @@ export class ProgrammesService {
     private detailsService: DetailsService,
     private readonly CredentialService: CredentialsService,
     private readonly TeamsService: TeamsService,
+    private readonly zoneService: ZoneService,
   ) { }
 
   //  To create many Programmes at a time , usually using on Excel file upload
@@ -345,11 +357,13 @@ export class ProgrammesService {
       // only return the candidateProgramme which have zonalposition.value < 2
 
       programme.forEach(programme => {
-        programme.candidateProgramme = programme.candidateProgramme.filter(cp => {if (programme.mode === Mode.STAGE) {
-          return cp.zonalposition?.value <= 2;
-        } else  {
-          return cp.zonalposition?.value <= 1;
-        }});
+        programme.candidateProgramme = programme.candidateProgramme.filter(cp => {
+          if (programme.mode === Mode.STAGE) {
+            return cp.zonalposition?.value <= 2;
+          } else {
+            return cp.zonalposition?.value <= 1;
+          }
+        });
       });
 
       return programme;
@@ -566,19 +580,19 @@ export class ProgrammesService {
                   candidate.totalPoint += cp?.zonalpoint;
                 }
               });
-            }else{
+            } else {
 
-              
-            const candidateWithPoint: candidateWithPoint = {
-              candidateName: cp.candidate.name,
-              teamName: cp.candidate.team.name,
-              zoneName: cp.candidate.team.zone.name,
-              totalPoint: cp.zonalpoint,
-              categoryName: programme.category.name,
-              chestNo: cp.candidate.chestNO,
-            };
 
-            topperCandidates.push(candidateWithPoint);
+              const candidateWithPoint: candidateWithPoint = {
+                candidateName: cp.candidate.name,
+                teamName: cp.candidate.team.name,
+                zoneName: cp.candidate.team.zone.name,
+                totalPoint: cp.zonalpoint,
+                categoryName: programme.category.name,
+                chestNo: cp.candidate.chestNO,
+              };
+
+              topperCandidates.push(candidateWithPoint);
             }
 
           });
@@ -780,11 +794,11 @@ export class ProgrammesService {
   //               categoryName: programme.category.name,
   //               chestNo: cp.candidate.chestNO,
   //             };
-  
+
   //             topperCandidates.push(candidateWithPoint);
   //           }
 
-          
+
   //         });
   //       }
 
@@ -826,6 +840,473 @@ export class ProgrammesService {
   //   }
 
   // }
+  async findResultPublishedProgrammesByFinal(fields: string[]) {
+    const allowedRelations = [
+      'programmes',
+      'programmes.category',
+      'programmes.candidateProgramme',
+      'programmes.candidateProgramme.candidate',
+      'programmes.candidateProgramme.candidate.team',
+      'programmes.category.settings',
+      'programmes.candidateProgramme.candidatesOfGroup',
+      'programmes.candidateProgramme.candidate.team.zone',
+      'programmes.candidateProgramme.zonalgrade',
+      'programmes.candidateProgramme.zonalposition',
+    ];
+
+    // validating fields
+    fields = fieldsValidator(fields, allowedRelations);
+
+    // checking if fields contains id
+    fields = fieldsIdChecker(fields);
+
+    // remove the programmes. from the fields
+    fields = fields.map(field => {
+      console.log(field);
+
+      if (field.includes('programmes.')) {
+        return field.replace('programmes.', '');
+      } else {
+        return field;
+      }
+    });
+
+    try {
+      const queryBuilder = this.programmeRepository
+        .createQueryBuilder('programme')
+        .leftJoinAndSelect('programme.category', 'category')
+        .leftJoinAndSelect('programme.candidateProgramme', 'candidateProgramme')
+        .leftJoinAndSelect('candidateProgramme.candidate', 'candidate')
+        .leftJoinAndSelect('candidate.team', 'team')
+        .leftJoinAndSelect('team.zone', 'zone')
+        .andWhere(`programme.publishedFinal = true`)
+        .andWhere(`candidateProgramme.finalpoint > 0`)
+        .leftJoinAndSelect('category.settings', 'settings')
+        .leftJoinAndSelect('candidateProgramme.finalgrade', 'finalgrade')
+        .leftJoinAndSelect('candidateProgramme.finalposition', 'finalposition')
+        .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup');
+
+      queryBuilder.select(
+        fields.map(column => {
+          const splitted = column.split('.');
+
+          if (splitted.length > 1) {
+            return `${splitted[splitted.length - 2]}.${splitted[splitted.length - 1]}`;
+          } else {
+            return `programme.${column}`;
+          }
+        }),
+      );
+
+      const programmes = await queryBuilder.getMany();
+
+      // find all teams of this zone and total thier zonalpoint
+
+      const teams = await this.TeamsService.findAll(['name', 'zone', 'zone.name', 'zone.id', 'isDegreeHave']);
+
+      const zones = await this.zoneService.findAll();
+
+      const zonesWithPoint = zones.map(zone => {
+        return {
+          zoneName: zone.name,
+          totalPercentage: 0,
+          totalPoint: 0,
+          categoryWisePoint: categories.map(category => {
+            return {
+              categoryName: category.name,
+              categoryPoint: 0,
+            };
+          }),
+        }
+      }
+      );
+
+      const categories = await this.categoryService.findAll(['name', 'id']);
+
+      const teamsOfFinal = teams
+
+      const teamsWithPoint: teamWithPoint[] = [];
+
+      // looping the teams
+
+      teamsOfFinal.forEach(team => {
+        const teamWithPoint: teamWithPoint = {
+          totalPercentage: 0,
+          teamName: team.name,
+          zoneName: team.zone.name,
+          totalPoint: 0,
+          categoryWisePoint: categories.map(category => {
+            return {
+              categoryName: category.name,
+              categoryPoint: 0,
+            };
+          }),
+        };
+
+        // looping the programmes
+
+        programmes?.forEach(programme => {
+
+          programme?.candidateProgramme?.forEach(cp => {
+            if (cp.candidate?.team?.name === team.name) {
+              teamWithPoint.totalPoint += cp.zonalpoint;
+              if (team.isDegreeHave) {
+                teamWithPoint.totalPercentage = (teamWithPoint.totalPoint / 418) / 100;
+              } else {
+                teamWithPoint.totalPercentage = (teamWithPoint.totalPoint / 242) / 100;
+              }
+
+              teamWithPoint.categoryWisePoint.forEach(categoryWisePoint => {
+                if (categoryWisePoint.categoryName === programme?.category?.name) {
+                  categoryWisePoint.categoryPoint += cp?.zonalpoint;
+                }
+              });
+            }
+            if (cp.candidate?.team?.zone?.name === team.zone.name) {
+              zonesWithPoint.forEach(zone => {
+                if (zone.zoneName === team.zone.name) {
+                  zone.totalPoint += cp.finalpoint;
+                  zone.categoryWisePoint.forEach(categoryWisePoint => {
+                    if (categoryWisePoint.categoryName === programme?.category?.name) {
+                      categoryWisePoint.categoryPoint += cp?.finalpoint;
+                    }
+                  });
+                }
+              })
+            }
+          }
+          );
+
+
+
+
+        });
+
+        teamsWithPoint.push(teamWithPoint);
+
+      });
+
+      teamsWithPoint.sort((a, b) => {
+        return b.totalPercentage - a.totalPercentage;
+      }
+      )
+
+      // finding top 5 candidates
+
+      const topperCandidates: candidateWithPoint[] = [];
+
+      programmes?.forEach(programme => {
+
+        if (programme.type == Type.SINGLE) {
+          programme?.candidateProgramme?.forEach(cp => {
+
+            // checking is candidate already in the topperCandidates array
+            const isCandidateExist = topperCandidates.some(
+              candidate => candidate.chestNo == cp?.candidate?.chestNO,
+            );
+
+            if (isCandidateExist) {
+              // add the point to the candidate
+              topperCandidates.forEach(candidate => {
+                if (candidate.chestNo === cp?.candidate?.chestNO) {
+                  candidate.totalPoint += cp?.finalpoint;
+                }
+              });
+            } else {
+
+
+              const candidateWithPoint: candidateWithPoint = {
+                candidateName: cp.candidate.name,
+                teamName: cp.candidate.team.name,
+                zoneName: cp.candidate.team.zone.name,
+                totalPoint: cp.finalpoint,
+                categoryName: programme.category.name,
+                chestNo: cp.candidate.chestNO,
+              };
+
+              topperCandidates.push(candidateWithPoint);
+            }
+
+          });
+        }
+
+      });
+
+      topperCandidates.sort((a, b) => {
+        return b.totalPoint - a.totalPoint;
+      }
+      )
+
+      // taking top 5 candidates from a category on topperCandidates
+
+      const top5Candidates: candidateWithPoint[] = [];
+
+      categories.forEach(category => {
+        let count = 0;
+        topperCandidates.forEach(candidate => {
+          if (candidate.categoryName === category.name && count < 5) {
+            top5Candidates.push(candidate);
+            count++;
+          }
+        });
+      });
+
+
+      console.log(top5Candidates);
+
+
+
+      return {
+        programmes: programmes,
+        topTeams: teamsWithPoint,
+        topCandidates: top5Candidates,
+        zonesWithPoint: zonesWithPoint
+      }
+
+    } catch (e) {
+      throw new HttpException(
+        'An Error have when finding programme ' + e.message,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        { cause: e },
+      );
+    }
+  }
+
+
+  // find the result entered programmes by zone
+  async findResultEnteredProgrammesByFinal(fields: string[]) {
+    const allowedRelations = [
+      'programmes',
+      'programmes.category',
+      'programmes.candidateProgramme',
+      'programmes.candidateProgramme.candidate',
+      'programmes.candidateProgramme.candidate.team',
+      'programmes.category.settings',
+      'programmes.candidateProgramme.candidatesOfGroup',
+      'programmes.candidateProgramme.candidate.team.zone',
+      'programmes.candidateProgramme.zonalgrade',
+      'programmes.candidateProgramme.zonalposition',
+    ];
+
+    // validating fields
+    fields = fieldsValidator(fields, allowedRelations);
+
+    // checking if fields contains id
+    fields = fieldsIdChecker(fields);
+
+    // remove the programmes. from the fields
+    fields = fields.map(field => {
+      console.log(field);
+
+      if (field.includes('programmes.')) {
+        return field.replace('programmes.', '');
+      } else {
+        return field;
+      }
+    });
+
+    try {
+      const queryBuilder = this.programmeRepository
+        .createQueryBuilder('programme')
+        .leftJoinAndSelect('programme.category', 'category')
+        .leftJoinAndSelect('programme.candidateProgramme', 'candidateProgramme')
+        .leftJoinAndSelect('candidateProgramme.candidate', 'candidate')
+        .leftJoinAndSelect('candidate.team', 'team')
+        .leftJoinAndSelect('team.zone', 'zone')
+        .andWhere(`programme.enteredFinal = true`)
+        .andWhere(`candidateProgramme.finalpoint > 0`)
+        .leftJoinAndSelect('category.settings', 'settings')
+        .leftJoinAndSelect('candidateProgramme.finalgrade', 'finalgrade')
+        .leftJoinAndSelect('candidateProgramme.finalposition', 'finalposition')
+        .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup');
+
+      queryBuilder.select(
+        fields.map(column => {
+          const splitted = column.split('.');
+
+          if (splitted.length > 1) {
+            return `${splitted[splitted.length - 2]}.${splitted[splitted.length - 1]}`;
+          } else {
+            return `programme.${column}`;
+          }
+        }),
+      );
+      const programmes = await queryBuilder.getMany();
+
+      // find all teams of this zone and total thier zonalpoint
+
+      const teams = await this.TeamsService.findAll(['name', 'zone', 'zone.name', 'zone.id', 'isDegreeHave']);
+
+      const categories = await this.categoryService.findAll(['name', 'id']);
+
+      const zones = await this.zoneService.findAll();
+
+      const zonesWithPoint = zones.map(zone => {
+        return {
+          zoneName: zone.name,
+          totalPercentage: 0,
+          totalPoint: 0,
+          categoryWisePoint: categories.map(category => {
+            return {
+              categoryName: category.name,
+              categoryPoint: 0,
+            };
+          }),
+        }
+      }
+      );
+
+      const teamsOfZone = teams
+
+      const teamsWithPoint: teamWithPoint[] = [];
+
+      // looping the teams
+
+      teamsOfZone.forEach(team => {
+        const teamWithPoint: teamWithPoint = {
+          totalPercentage: 0,
+          teamName: team.name,
+          zoneName: team.zone.name,
+          totalPoint: 0,
+          categoryWisePoint: categories.map(category => {
+            return {
+              categoryName: category.name,
+              categoryPoint: 0,
+            };
+          }),
+        };
+
+        // looping the programmes
+
+        programmes?.forEach(programme => {
+
+          programme?.candidateProgramme?.forEach(cp => {
+            if (cp.candidate?.team?.name === team.name) {
+              teamWithPoint.totalPoint += cp.finalpoint;
+              if (team.isDegreeHave) {
+                teamWithPoint.totalPercentage = (teamWithPoint.totalPoint / 418) / 100;
+              } else {
+                teamWithPoint.totalPercentage = (teamWithPoint.totalPoint / 242) / 100;
+              }
+
+              teamWithPoint.categoryWisePoint.forEach(categoryWisePoint => {
+                if (categoryWisePoint.categoryName === programme?.category?.name) {
+                  categoryWisePoint.categoryPoint += cp?.finalpoint;
+                }
+              });
+            }
+
+            if (cp.candidate?.team?.zone?.name === team.zone.name) {
+              zonesWithPoint.forEach(zone => {
+                if (zone.zoneName === team.zone.name) {
+                  zone.totalPoint += cp.finalpoint;
+                  zone.categoryWisePoint.forEach(categoryWisePoint => {
+                    if (categoryWisePoint.categoryName === programme?.category?.name) {
+                      categoryWisePoint.categoryPoint += cp?.finalpoint;
+                    }
+                  });
+                }
+              })
+            }
+          }
+          );
+
+
+
+
+        });
+
+        teamsWithPoint.push(teamWithPoint);
+
+      });
+
+      teamsWithPoint.sort((a, b) => {
+        return b.totalPercentage - a.totalPercentage;
+      }
+      )
+
+      // finding top 5 candidates
+
+      const topperCandidates: candidateWithPoint[] = [];
+
+      programmes?.forEach(programme => {
+
+        if (programme.type == Type.SINGLE) {
+          programme?.candidateProgramme?.forEach(cp => {
+
+            // checking is candidate already in the topperCandidates array
+            const isCandidateExist = topperCandidates.some(
+              candidate => candidate.chestNo == cp?.candidate?.chestNO,
+            );
+
+            if (isCandidateExist) {
+              // add the point to the candidate
+              topperCandidates.forEach(candidate => {
+                if (candidate.chestNo === cp?.candidate?.chestNO) {
+                  candidate.totalPoint += cp?.finalpoint;
+                }
+              });
+            } else {
+
+
+              const candidateWithPoint: candidateWithPoint = {
+                candidateName: cp.candidate.name,
+                teamName: cp.candidate.team.name,
+                zoneName: cp.candidate.team.zone.name,
+                totalPoint: cp.finalpoint,
+                categoryName: programme.category.name,
+                chestNo: cp.candidate.chestNO,
+              };
+
+              topperCandidates.push(candidateWithPoint);
+            }
+
+          });
+        }
+
+      });
+
+      topperCandidates.sort((a, b) => {
+        return b.totalPoint - a.totalPoint;
+      }
+      )
+
+      // taking top 5 candidates from a category on topperCandidates
+
+      const top5Candidates: candidateWithPoint[] = [];
+
+      categories.forEach(category => {
+        let count = 0;
+        topperCandidates.forEach(candidate => {
+          if (candidate.categoryName === category.name && count < 5) {
+            top5Candidates.push(candidate);
+            count++;
+          }
+        });
+      });
+
+
+      console.log(top5Candidates);
+
+
+
+      return {
+        programmes: programmes,
+        topTeams: teamsWithPoint,
+        topCandidates: top5Candidates,
+        zonesWithPoint: zonesWithPoint
+      }
+
+    } catch (e) {
+      throw new HttpException(
+        'An Error have when finding programme ' + e.message,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        { cause: e },
+      );
+    }
+  }
+
+  // find the result published programmes by zone
   async findResultPublishedProgrammesByZone(zone: string, fields: string[]) {
     const allowedRelations = [
       'programmes',
@@ -969,19 +1450,19 @@ export class ProgrammesService {
                   candidate.totalPoint += cp?.zonalpoint;
                 }
               });
-            }else{
+            } else {
 
-              
-            const candidateWithPoint: candidateWithPoint = {
-              candidateName: cp.candidate.name,
-              teamName: cp.candidate.team.name,
-              zoneName: cp.candidate.team.zone.name,
-              totalPoint: cp.zonalpoint,
-              categoryName: programme.category.name,
-              chestNo: cp.candidate.chestNO,
-            };
 
-            topperCandidates.push(candidateWithPoint);
+              const candidateWithPoint: candidateWithPoint = {
+                candidateName: cp.candidate.name,
+                teamName: cp.candidate.team.name,
+                zoneName: cp.candidate.team.zone.name,
+                totalPoint: cp.zonalpoint,
+                categoryName: programme.category.name,
+                chestNo: cp.candidate.chestNO,
+              };
+
+              topperCandidates.push(candidateWithPoint);
             }
 
           });
@@ -1638,10 +2119,10 @@ export class ProgrammesService {
     }
 
     try {
-      
-        return this.programmeRepository.query(
-          `UPDATE programme SET enteredFinal = true WHERE programCode = "${programCode}" `,
-        );
+
+      return this.programmeRepository.query(
+        `UPDATE programme SET enteredFinal = true WHERE programCode = "${programCode}" `,
+      );
 
 
     } catch (e) {
@@ -1713,10 +2194,10 @@ export class ProgrammesService {
     // }
 
     try {
-     
-        return this.programmeRepository.query(
-          `UPDATE programme SET publishedFinal = true WHERE programCode = "${programCode}" `,
-        );
+
+      return this.programmeRepository.query(
+        `UPDATE programme SET publishedFinal = true WHERE programCode = "${programCode}" `,
+      );
 
 
     } catch (e) {

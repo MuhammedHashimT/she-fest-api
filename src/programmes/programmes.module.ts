@@ -7,6 +7,7 @@ import { CategoryModule } from 'src/category/category.module';
 import { CredentialsModule } from 'src/credentials/credentials.module';
 import { DetailsModule } from 'src/details/details.module';
 import { TeamsModule } from 'src/teams/teams.module';
+import { ZoneModule } from 'src/zone/zone.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { TeamsModule } from 'src/teams/teams.module';
     CredentialsModule,
     DetailsModule,
     TeamsModule,
+    ZoneModule
   ],
   providers: [ProgrammesResolver, ProgrammesService],
   exports: [ProgrammesService],

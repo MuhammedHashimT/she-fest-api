@@ -116,6 +116,22 @@ export class ProgrammesResolver {
     return this.programmesService.findResultPublishedProgrammesByZone(zone , fields);
   }
 
+  @Query(() => ResultsRead , { name: 'findResultEnteredProgrammesByZone' })
+  findResultEnteredProgrammesByFinal(
+    @Info() info: any
+  ) {
+    const fields = Object.keys(fieldsProjection(info));
+    return this.programmesService.findResultEnteredProgrammesByFinal(fields);
+  }
+
+  @Query(() => ResultsRead , { name: 'findResultPublishedProgrammesByFinal' })
+  findResultPublishedProgrammesByFinal(
+    @Info() info: any
+  ) {
+    const fields = Object.keys(fieldsProjection(info));
+    return this.programmesService.findResultPublishedProgrammesByFinal(fields);
+  }
+
   // findResultEnteredProgrammesByTeam
   @Query(() => [Programme], { name: 'findResultEnteredProgrammesByTeam' })
   findResultEnteredProgrammesByTeam(
