@@ -1149,7 +1149,7 @@ export class ProgrammesService {
 
       const zonesWithPoint = zones.map(zone => {
         return {
-          zoneName: zone.name,
+          name: zone?.name,
           totalPercentage: 0,
           totalPoint: 0,
           categoryWisePoint: categories.map(category => {
@@ -1204,7 +1204,7 @@ export class ProgrammesService {
 
             if (cp.candidate?.team?.zone?.name === team.zone.name) {
               zonesWithPoint.forEach(zone => {
-                if (zone.zoneName === team.zone.name) {
+                if (zone.name === team.zone.name) {
                   zone.totalPoint += cp?.finalpoint;
                   zone.categoryWisePoint.forEach(categoryWisePoint => {
                     if (categoryWisePoint.categoryName === programme?.category?.name) {
