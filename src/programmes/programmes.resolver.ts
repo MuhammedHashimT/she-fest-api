@@ -11,7 +11,7 @@ import { ScheduleCreate } from './dto/scheduleCreate.dto';
 import { createInput } from './dto/create-inputs.inputs';
 import { fieldsProjection } from 'graphql-fields-list';
 import { CredentialsService } from 'src/credentials/credentials.service';
-import { ResultsRead } from './dto/results.read';
+import { ResultsRead, ResultsReadFinal } from './dto/results.read';
 
 @Resolver(() => Programme)
 export class ProgrammesResolver {
@@ -116,7 +116,7 @@ export class ProgrammesResolver {
     return this.programmesService.findResultPublishedProgrammesByZone(zone , fields);
   }
 
-  @Query(() => ResultsRead , { name: 'findResultEnteredProgrammesByZone' })
+  @Query(() => ResultsReadFinal , { name: 'findResultEnteredProgrammesByFinal' })
   findResultEnteredProgrammesByFinal(
     @Info() info: any
   ) {
@@ -124,7 +124,7 @@ export class ProgrammesResolver {
     return this.programmesService.findResultEnteredProgrammesByFinal(fields);
   }
 
-  @Query(() => ResultsRead , { name: 'findResultPublishedProgrammesByFinal' })
+  @Query(() => ResultsReadFinal , { name: 'findResultPublishedProgrammesByFinal' })
   findResultPublishedProgrammesByFinal(
     @Info() info: any
   ) {

@@ -14,3 +14,19 @@ export class ResultsRead {
     @Field(() => [candidateWithPoint])
     topCandidates: [candidateWithPoint]
 }
+
+@ObjectType()
+export class ResultsReadFinal {
+
+    @Field(() => [Programme])
+    programmes: [Programme];
+
+    @Field(() => [teamWithPoint])
+    topTeams: [teamWithPoint];
+
+    @Field(() => [candidateWithPoint])
+    topCandidates: [candidateWithPoint]
+
+    @Field(() => [teamWithPoint])
+    topTeamsFinal: [teamWithPoint];
+}
