@@ -1764,6 +1764,8 @@ export class ProgrammesService {
           'candidateProgramme.candidatesOfGroup',
           'candidateProgramme.zonalgrade',
           'candidateProgramme.zonalposition',
+          'candidateProgramme.finalgrade',
+          'candidateProgramme.finalposition',
         ],
       });
 

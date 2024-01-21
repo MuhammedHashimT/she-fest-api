@@ -92,7 +92,7 @@ export class ResultGenService {
     // Clear the position first before generating new one
     for (let index = 0; index < candidatesOfProgramme.length; index++) {
       const candidate = candidatesOfProgramme[index];
-      candidate.zonalposition = null;
+      candidate.finalposition = null;
     }
 
     candidatesOfProgramme = await this.generatePosition(
@@ -180,9 +180,9 @@ export class ResultGenService {
     const finalCandidates: CandidateProgramme[] = candidatesOfProgramme.filter(
       (candidateProgramme: CandidateProgramme) => {
         if (programme.mode == Mode.STAGE) {
-          return candidateProgramme.zonalposition.value <= 2
+          return candidateProgramme.zonalposition?.value <= 2
         } else {
-          return candidateProgramme.zonalposition.value == 1
+          return candidateProgramme.zonalposition?.value == 1
         }
       },
     );
@@ -564,9 +564,9 @@ export class ResultGenService {
     let candidatesOfProgramme: CandidateProgramme[] = programme.candidateProgramme.filter(
       (candidateProgramme: CandidateProgramme) => {
         if (programme.mode == Mode.STAGE) {
-          return candidateProgramme.zonalposition.value <= 2
+          return candidateProgramme.zonalposition?.value <= 2
         } else {
-          return candidateProgramme.zonalposition.value == 1
+          return candidateProgramme.zonalposition?.value == 1
         }
       },
     );
