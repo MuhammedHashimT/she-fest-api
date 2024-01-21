@@ -1292,10 +1292,10 @@ export class ProgrammesService {
       });
 
 
-      console.log(top5Candidates);
+      // console.log(top5Candidates);
 
 
-      console.log(programmes);
+      console.log(zonesWithPoint);
 
         
 

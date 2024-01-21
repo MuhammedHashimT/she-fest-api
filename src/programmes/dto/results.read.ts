@@ -28,5 +28,5 @@ export class ResultsReadFinal {
     topCandidates: [candidateWithPoint]
 
     @Field(() => [zonesWithPoint])
-    topZones: [zonesWithPoint]
+    zonesWithPoint: [zonesWithPoint]
 }
