@@ -78,14 +78,14 @@ export class ResultGenService {
 
     for (let index = 0; index < candidatesOfProgramme.length; index++) {
       const candidate = candidatesOfProgramme[index];
-      candidate.zonalgrade = null;
+      candidate.finalgrade = null;
     }
 
     //  Generating Grade for each candidate
     for (let index = 0; index < candidatesOfProgramme.length; index++) {
       const candidate = candidatesOfProgramme[index];
       const grade: Grade = await this.generateGrade(candidate.mark, programme);
-      candidate.zonalgrade = grade;
+      candidate.finalgrade = grade;
     }
     // Generating Position for each candidate
 
@@ -120,6 +120,9 @@ export class ResultGenService {
 
     // checking the two input ore equal
 
+    console.log(candidatesOfProgramme.length , input.length);
+    
+
     const isSameLength = candidatesOfProgramme.length === input.length;
 
     // sorting data
@@ -143,6 +146,8 @@ export class ResultGenService {
 
       return chestNoA - chestNoB;
     });
+
+    console.log(candidatesOfProgramme.length , input.length);
 
     if (!isSameLength) {
       throw new HttpException(
@@ -169,6 +174,8 @@ export class ResultGenService {
   // verify the result mannualy
 
   async verifyResultManual(input: AddManual[], programCode: string) {
+    console.log("verifyResultManual");
+    
     // CHANGED SOME FOR DH HOUSING ONLY
 
     // all candidates of programme
@@ -186,6 +193,9 @@ export class ResultGenService {
         }
       },
     );
+
+    console.log(finalCandidates);
+    
 
     // checking the two input ore equal
 
@@ -210,6 +220,9 @@ export class ResultGenService {
 
       return chestNoA.localeCompare(chestNoB);
     });
+
+      console.log(finalCandidates.length , input.length);
+      
 
     if (!isSameLength) {
       throw new HttpException(
@@ -304,7 +317,7 @@ export class ResultGenService {
       const position: Position = Positions[changed[index] - 1];
 
       if (position) {
-        candidateProgramme.zonalposition = position;
+        candidateProgramme.finalposition = position;
       }
     }
 
@@ -315,9 +328,9 @@ export class ResultGenService {
     console.log(CandidateProgramme);
 
     // giving the point of grade
-    const grade: Grade = CandidateProgramme.zonalgrade;
+    const grade: Grade = CandidateProgramme.finalgrade;
 
-    CandidateProgramme.zonalpoint = 0;
+    CandidateProgramme.finalpoint = 0;
 
     if (grade) {
       const gradeWithPoint = await this.gradeService.findOne(grade.id, [
@@ -340,7 +353,7 @@ export class ResultGenService {
     }
 
     // giving the point of position
-    const position: Position = CandidateProgramme.zonalposition;
+    const position: Position = CandidateProgramme.finalposition;
 
     if (position) {
       if (CandidateProgramme.programme.type == Type.SINGLE) {
@@ -617,33 +630,33 @@ export class ResultGenService {
       const candidateProgramme: CandidateProgramme = sortedCandidateProgramme[index];
 
       let mark = 0;
-      candidateProgramme.zonalgrade = null;
-      if (input.grade) {
-        const grade: Grade = await this.gradeService.findOneByName(input.grade, [
-          'id',
-          'pointSingle',
-          'pointGroup',
-          'pointHouse',
-          'percentage',
-        ]);
+      candidateProgramme.finalgrade = null;
+        if (input.grade) {
+          const grade: Grade = await this.gradeService.findOneByName(input.grade, [
+            'id',
+            'pointSingle',
+            'pointGroup',
+            'pointHouse',
+            'percentage',
+          ]);
 
-        if (grade) {
+          if (grade) {
 
-          candidateProgramme.finalgrade = grade;
+            candidateProgramme.finalgrade = grade;
 
 
-          // calculating the mark
-          if (programme.type == Type.SINGLE) {
-            mark = grade.pointSingle;
-          } else if (programme.type == Type.GROUP) {
-            mark = grade.pointGroup;
-          } else if (programme.type == Type.HOUSE) {
-            mark = grade.pointHouse;
+            // calculating the mark
+            if (programme.type == Type.SINGLE) {
+              mark = grade.pointSingle;
+            } else if (programme.type == Type.GROUP) {
+              mark = grade.pointGroup;
+            } else if (programme.type == Type.HOUSE) {
+              mark = grade.pointHouse;
+            }
           }
         }
-      }
 
-      candidateProgramme.zonalposition = null;
+      candidateProgramme.finalposition = null;
 
       if (input.position) {
         const position: Position = await this.positionService.findOneByName(input.position, [

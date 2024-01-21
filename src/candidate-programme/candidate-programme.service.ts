@@ -448,6 +448,8 @@ export class CandidateProgrammeService {
       .leftJoinAndSelect('candidate.team', 'team')
       .leftJoinAndSelect('CandidateProgramme.zonalgrade', 'zonalgrade')
       .leftJoinAndSelect('candidateProgramme.zonalposition', 'zonalposition')
+      .leftJoinAndSelect('CandidateProgramme.finalgrade', 'finalgrade')
+      .leftJoinAndSelect('candidateProgramme.finalposition', 'finalposition')
       .leftJoinAndSelect('programme.category', 'programmeCategory')
       .leftJoinAndSelect('category.settings', 'settings')
       .leftJoinAndSelect('candidate.candidateProgrammes', 'cp');

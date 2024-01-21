@@ -449,6 +449,8 @@ export class ProgrammesService {
       'programmes.candidateProgramme.candidate.team.zone',
       'programmes.candidateProgramme.zonalgrade',
       'programmes.candidateProgramme.zonalposition',
+      'programmes.candidateProgramme.finalgrade',
+      'programmes.candidateProgramme.finalposition',
     ];
 
     // validating fields
@@ -482,6 +484,8 @@ export class ProgrammesService {
         .leftJoinAndSelect('category.settings', 'settings')
         .leftJoinAndSelect('candidateProgramme.zonalgrade', 'zonalgrade')
         .leftJoinAndSelect('candidateProgramme.zonalposition', 'zonalposition')
+        .leftJoinAndSelect('candidateProgramme.finalgrade', 'finalgrade')
+        .leftJoinAndSelect('candidateProgramme.finalposition', 'finalposition')
         .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup');
 
       queryBuilder.select(
@@ -503,7 +507,7 @@ export class ProgrammesService {
 
       const categories = await this.categoryService.findAll(['name', 'id']);
 
-      const teamsOfZone = teams.filter(team => team.zone.name === zone);
+      const teamsOfZone = teams
 
       const teamsWithPoint: teamWithPoint[] = [];
 
@@ -1116,6 +1120,8 @@ export class ProgrammesService {
         .andWhere(`programme.enteredFinal = true`)
         .andWhere(`candidateProgramme.finalpoint > 0`)
         .leftJoinAndSelect('category.settings', 'settings')
+        .leftJoinAndSelect('candidateProgramme.zonalgrade', 'zonalgrade')
+        .leftJoinAndSelect('candidateProgramme.zonalposition', 'zonalposition')
         .leftJoinAndSelect('candidateProgramme.finalgrade', 'finalgrade')
         .leftJoinAndSelect('candidateProgramme.finalposition', 'finalposition')
         .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup');
@@ -1182,7 +1188,7 @@ export class ProgrammesService {
 
           programme?.candidateProgramme?.forEach(cp => {
             if (cp.candidate?.team?.name === team.name) {
-              teamWithPoint.totalPoint += cp.finalpoint;
+              teamWithPoint.totalPoint += cp?.finalpoint;
               if (team.isDegreeHave) {
                 teamWithPoint.totalPercentage = (teamWithPoint.totalPoint / 418) / 100;
               } else {
@@ -1199,7 +1205,7 @@ export class ProgrammesService {
             if (cp.candidate?.team?.zone?.name === team.zone.name) {
               zonesWithPoint.forEach(zone => {
                 if (zone.zoneName === team.zone.name) {
-                  zone.totalPoint += cp.finalpoint;
+                  zone.totalPoint += cp?.finalpoint;
                   zone.categoryWisePoint.forEach(categoryWisePoint => {
                     if (categoryWisePoint.categoryName === programme?.category?.name) {
                       categoryWisePoint.categoryPoint += cp?.finalpoint;
@@ -1288,6 +1294,10 @@ export class ProgrammesService {
 
       console.log(top5Candidates);
 
+
+      console.log(programmes);
+
+        
 
 
       return {
@@ -2112,6 +2122,9 @@ export class ProgrammesService {
   async enterResult(programCode: string) {
     // checking the code is correct
     const programme: Programme = await this.findOneByCodeForCheck(programCode);
+
+    console.log('entering');
+    
 
     if (!programme) {
       throw new HttpException(
