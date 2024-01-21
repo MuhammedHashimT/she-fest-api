@@ -1626,7 +1626,7 @@ export class ProgrammesService {
     }
   }
 
-  async enterResult(programCode: string, zone: string) {
+  async enterResult(programCode: string) {
     // checking the code is correct
     const programme: Programme = await this.findOneByCodeForCheck(programCode);
 
@@ -1638,31 +1638,10 @@ export class ProgrammesService {
     }
 
     try {
-      if (zone == 'A') {
-        return this.programmeRepository.query(
-          `UPDATE programme SET enteredA = true WHERE programCode = "${programCode}" `,
-        );
-      } else if (zone == 'B') {
-        return this.programmeRepository.query(
-          `UPDATE programme SET enteredB = true WHERE programCode = "${programCode}" `,
-        );
-      } else if (zone == 'C') {
-        return this.programmeRepository.query(
-          `UPDATE programme SET enteredC = true WHERE programCode = "${programCode}" `,
-        );
-      } else if (zone == 'D') {
-        return this.programmeRepository.query(
-          `UPDATE programme SET enteredD = true WHERE programCode = "${programCode}" `,
-        );
-      } else if (zone == 'E') {
-        return this.programmeRepository.query(
-          `UPDATE programme SET enteredE = true WHERE programCode = "${programCode}" `,
-        );
-      } else if (zone == 'Final') {
+      
         return this.programmeRepository.query(
           `UPDATE programme SET enteredFinal = true WHERE programCode = "${programCode}" `,
         );
-      }
 
 
     } catch (e) {
@@ -1722,7 +1701,7 @@ export class ProgrammesService {
     }
   }
 
-  async publishResult(programCode: string, zone: string) {
+  async publishResult(programCode: string) {
     // checking the code is correct
     // const programme: Programme = await this.findOneByCodeForCheck(programCode);
 
@@ -1734,31 +1713,10 @@ export class ProgrammesService {
     // }
 
     try {
-      if (zone == 'A') {
-        return this.programmeRepository.query(
-          `UPDATE programme SET publishedA = true WHERE programCode = "${programCode}" `,
-        );
-      } else if (zone == 'B') {
-        return this.programmeRepository.query(
-          `UPDATE programme SET publishedB = true WHERE programCode = "${programCode}" `,
-        );
-      } else if (zone == 'C') {
-        return this.programmeRepository.query(
-          `UPDATE programme SET publishedC = true WHERE programCode = "${programCode}" `,
-        );
-      } else if (zone == 'D') {
-        return this.programmeRepository.query(
-          `UPDATE programme SET publishedD = true WHERE programCode = "${programCode}" `,
-        );
-      } else if (zone == 'E') {
-        return this.programmeRepository.query(
-          `UPDATE programme SET publishedE = true WHERE programCode = "${programCode}" `,
-        );
-      } else if (zone == 'Final') {
+     
         return this.programmeRepository.query(
           `UPDATE programme SET publishedFinal = true WHERE programCode = "${programCode}" `,
         );
-      }
 
 
     } catch (e) {

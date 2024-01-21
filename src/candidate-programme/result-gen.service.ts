@@ -9,7 +9,7 @@ import { PositionService } from 'src/position/position.service';
 import { Position } from 'src/position/entities/position.entity';
 import { CandidateProgrammeService } from './candidate-programme.service';
 import { ProgrammesService } from 'src/programmes/programmes.service';
-import { Programme, Type } from 'src/programmes/entities/programme.entity';
+import { Mode, Programme, Type } from 'src/programmes/entities/programme.entity';
 import { DetailsService } from 'src/details/details.service';
 import { arrayInput } from './dto/array-input.dto';
 import { TeamsService } from 'src/teams/teams.service';
@@ -168,26 +168,26 @@ export class ResultGenService {
 
   // verify the result mannualy
 
-  async verifyResultManual(input: AddManual[], programCode: string, zone: string) {
+  async verifyResultManual(input: AddManual[], programCode: string) {
     // CHANGED SOME FOR DH HOUSING ONLY
 
     // all candidates of programme
     const candidatesOfProgramme: CandidateProgramme[] =
       await this.candidateProgrammeService.getCandidatesOfProgramme(programCode);
 
-    const zoneCandidatesOfProgramme: CandidateProgramme[] = candidatesOfProgramme.filter(
+    const finalCandidates: CandidateProgramme[] = candidatesOfProgramme.filter(
       (candidateProgramme: CandidateProgramme) => {
-        return candidateProgramme.candidate?.team?.zone?.name == zone;
+        return candidateProgramme.zonalposition;
       },
     );
 
     // checking the two input ore equal
 
-    const isSameLength = zoneCandidatesOfProgramme.length === input.length;
+    const isSameLength = finalCandidates.length === input.length;
 
     // sorting data
 
-    let sortedCandidateProgramme = zoneCandidatesOfProgramme.sort(
+    let sortedCandidateProgramme = finalCandidates.sort(
       (a: CandidateProgramme, b: CandidateProgramme) => {
         // sort by chest no which is a string
         const chestNoA: string = a.candidate?.chestNO;
@@ -478,7 +478,7 @@ export class ResultGenService {
   //   }
   // }
 
-  async publishResult(programCode: string, zone: string) {
+  async publishResult(programCode: string) {
     // checking the programme exist
 
     const programme: Programme = await this.programmeService.findOneByCode(programCode);
@@ -487,67 +487,6 @@ export class ResultGenService {
       throw new HttpException('Programme does not exist', HttpStatus.BAD_REQUEST);
     }
 
-    // checking the programme is already published
-
-    if (zone == 'A') {
-      if (programme.publishedA) {
-        throw new HttpException(`Programme is already published on zone ${zone}`, HttpStatus.BAD_REQUEST);
-      }
-    } else if (zone == 'B') {
-      if (programme.publishedB) {
-        throw new HttpException(`Programme is already published on zone ${zone}`, HttpStatus.BAD_REQUEST);
-      }
-    } else if (zone == 'C') {
-      if (programme.publishedC) {
-        throw new HttpException(`Programme is already published on zone ${zone}`, HttpStatus.BAD_REQUEST);
-      }
-    } else if (zone == 'D') {
-      if (programme.publishedD) {
-        throw new HttpException(`Programme is already published on zone ${zone}`, HttpStatus.BAD_REQUEST);
-      }
-    } else if (zone == 'E') {
-      if (programme.publishedE) {
-        throw new HttpException(`Programme is already published on zone ${zone}`, HttpStatus.BAD_REQUEST);
-      }
-    } else if (zone == 'Final') {
-      if (programme.publishedFinal) {
-        throw new HttpException(`Programme is already published on zone ${zone}`, HttpStatus.BAD_REQUEST);
-      }
-    }
-
-
-
-    // checking the programme is entered 
-
-    if (zone == 'A') {
-      if (!programme.enteredA) {
-        throw new HttpException(`Programme is not entered on zone ${zone}`, HttpStatus.BAD_REQUEST);
-      }
-    } else if (zone == 'B') {
-      if (!programme.enteredB) {
-        throw new HttpException(`Programme is not entered on zone ${zone}`, HttpStatus.BAD_REQUEST);
-      }
-    }
-    else if (zone == 'C') {
-      if (!programme.enteredC) {
-        throw new HttpException(`Programme is not entered on zone ${zone}`, HttpStatus.BAD_REQUEST);
-      }
-    }
-    else if (zone == 'D') {
-      if (!programme.enteredD) {
-        throw new HttpException(`Programme is not entered on zone ${zone}`, HttpStatus.BAD_REQUEST);
-      }
-    }
-    else if (zone == 'E') {
-      if (!programme.enteredE) {
-        throw new HttpException(`Programme is not entered on zone ${zone}`, HttpStatus.BAD_REQUEST);
-      }
-    }
-    else if (zone == 'Final') {
-      if (!programme.enteredFinal) {
-        throw new HttpException(`Programme is not entered on zone ${zone}`, HttpStatus.BAD_REQUEST);
-      }
-    }
 
 
 
@@ -592,16 +531,16 @@ export class ResultGenService {
 
     // set the result published to true
 
-    this.programmeService.publishResult(programCode, zone);
+    this.programmeService.publishResult(programCode);
 
     return;
   }
 
-  async publishResults(programCode: [string], zone: string) {
+  async publishResults(programCode: [string]) {
     let data = [];
     for (let index = 0; index < programCode.length; index++) {
       const program = programCode[index];
-      let programme = await this.publishResult(program, zone);
+      let programme = await this.publishResult(program);
       data.push(programme);
     }
 
@@ -609,7 +548,7 @@ export class ResultGenService {
   }
 
   // upload result mannualy by controller
-  async uploadResultManually(programCode: string, input: AddManual[], zone: string) {
+  async uploadResultManually(programCode: string, input: AddManual[]) {
     // check if programme exist
 
     const programme: Programme = await this.programmeService.findOneByCode(programCode);
@@ -618,7 +557,11 @@ export class ResultGenService {
 
     let candidatesOfProgramme: CandidateProgramme[] = programme.candidateProgramme.filter(
       (candidateProgramme: CandidateProgramme) => {
-        return candidateProgramme.candidate?.team?.zone?.name == zone;
+        if (programme.mode == Mode.STAGE || programme.name.toUpperCase() == 'CALLIGRAPHY') {
+          return candidateProgramme.zonalposition.value <= 2
+        } else {
+          return candidateProgramme.zonalposition.value == 1
+        }
       },
     );
 
@@ -634,18 +577,18 @@ export class ResultGenService {
 
     // verify the result
 
-    await this.verifyResultManual(input, programme.programCode, zone);
+    await this.verifyResultManual(input, programme.programCode);
 
     // giving grade to each candidate
 
     // sort the input
 
     const sortedInput = input.sort((a: AddManual, b: AddManual) => {
-     // sort by chest no which is a string
-     const chestNoA: string = a?.chestNo;
-     const chestNoB: string = b?.chestNo;
+      // sort by chest no which is a string
+      const chestNoA: string = a?.chestNo;
+      const chestNoB: string = b?.chestNo;
 
-     return chestNoA.localeCompare(chestNoB);
+      return chestNoA.localeCompare(chestNoB);
     });
 
     // sort the candidate programme
@@ -679,11 +622,9 @@ export class ResultGenService {
         ]);
 
         if (grade) {
-          if (zone) {
-            candidateProgramme.zonalgrade = grade;
-          } else {
-            candidateProgramme.finalgrade = grade;
-          }
+
+          candidateProgramme.finalgrade = grade;
+
 
           // calculating the mark
           if (programme.type == Type.SINGLE) {
@@ -708,11 +649,9 @@ export class ResultGenService {
         ]);
 
         if (position) {
-          if (zone) {
-            candidateProgramme.zonalposition = position;
-          } else {
-            candidateProgramme.finalposition = position;
-          }
+
+          candidateProgramme.finalposition = position;
+
           // calculating the mark
 
           if (programme.type == Type.SINGLE) {
@@ -725,11 +664,9 @@ export class ResultGenService {
         }
       }
 
-      if (zone) {
-        candidateProgramme.zonalpoint = mark;
-      } else {
-        candidateProgramme.finalpoint = mark;
-      }
+
+      candidateProgramme.finalpoint = mark;
+
 
       // save the candidate programme
 
@@ -738,7 +675,7 @@ export class ResultGenService {
 
     // make the programme result entered
 
-    await this.programmeService.enterResult(programCode, zone);
+    await this.programmeService.enterResult(programCode);
 
     return programme;
   }

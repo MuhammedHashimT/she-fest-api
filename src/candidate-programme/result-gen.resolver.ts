@@ -39,16 +39,14 @@ export class ResultGenResolver {
   //   return this.resultGenService.approveJudgeResult(programmeCode, judgeName);
   // }
 
-
-
   @Mutation(() => [Programme])
   @HasRoles(Roles.Controller)
   @UseGuards(RolesGuard)
   async publishResults(
     @Args('programmeCode', { type: () => [String] }) programmeCode: [string],
-    @Args('zone') zone: string,
+   
   ) {
-    return this.resultGenService.publishResults(programmeCode, zone);
+    return this.resultGenService.publishResults(programmeCode);
   }
 
   @Mutation(() => Int)
@@ -56,9 +54,8 @@ export class ResultGenResolver {
   @UseGuards(RolesGuard)
   async publishResult(
     @Args('programmeCode') programmeCode: string,
-    @Args('zone') zone: string,
   ) {
-    return this.resultGenService.publishResult(programmeCode, zone);
+    return this.resultGenService.publishResult(programmeCode);
   }
 
   // upload result manually
@@ -67,10 +64,9 @@ export class ResultGenResolver {
   @UseGuards(RolesGuard)
   async uploadResultanually(
     @Args('programmeCode') programmeCode: string,
-    @Args('addManual', { type: () => [AddManual] }) addManual: [AddManual],
-    @Args('zone') zone: string,
+    @Args('addManual', { type: () => [AddManual] }) addManual: [AddManual]
   ) {
-    return this.resultGenService.uploadResultManually(programmeCode, addManual, zone);
+    return this.resultGenService.uploadResultManually(programmeCode, addManual);
   }
 
 }
