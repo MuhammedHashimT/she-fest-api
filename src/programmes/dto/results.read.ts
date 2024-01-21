@@ -1,6 +1,6 @@
 import { Field, ObjectType } from "@nestjs/graphql"
 import { Programme } from "../entities/programme.entity"
-import { candidateWithPoint, teamWithPoint } from "../programmes.service"
+import { candidateWithPoint, teamWithPoint, zonesWithPoint } from "../programmes.service"
 
 @ObjectType()
 export class ResultsRead {
@@ -27,6 +27,6 @@ export class ResultsReadFinal {
     @Field(() => [candidateWithPoint])
     topCandidates: [candidateWithPoint]
 
-    @Field(() => [teamWithPoint])
-    topTeamsFinal: [teamWithPoint];
+    @Field(() => [zonesWithPoint])
+    topZones: [zonesWithPoint]
 }
