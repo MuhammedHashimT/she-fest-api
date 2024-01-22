@@ -632,6 +632,10 @@ export class ResultGenService {
       let mark = 0;
       candidateProgramme.finalgrade = null;
         if (input.grade) {
+          console.log(input.grade);
+         
+          
+          
           const grade: Grade = await this.gradeService.findOneByName(input.grade, [
             'id',
             'pointSingle',
@@ -641,6 +645,8 @@ export class ResultGenService {
           ]);
 
           if (grade) {
+
+            console.log(grade);
 
             candidateProgramme.finalgrade = grade;
 
@@ -659,6 +665,7 @@ export class ResultGenService {
       candidateProgramme.finalposition = null;
 
       if (input.position) {
+        console.log(input.position);
         const position: Position = await this.positionService.findOneByName(input.position, [
           'id',
           'pointSingle',
@@ -668,6 +675,9 @@ export class ResultGenService {
         ]);
 
         if (position) {
+
+          console.log(position);
+          
 
           candidateProgramme.finalposition = position;
 
