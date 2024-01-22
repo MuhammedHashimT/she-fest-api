@@ -422,6 +422,10 @@ export class CandidateProgrammeService {
   }
 
   findOne(id: number) {
+    // this.candidateProgrammeRepository.query(
+    //   `UPDATE candidateProgramme SET zonalPosition = 1 WHERE candidateProgramme.programme.programCode = "TX1" and candidateProgramme.candidate.chestNO = "CMS227284"`,
+    // );
+
     return this.candidateProgrammeRepository.findOne({
       where: { id },
       relations: [

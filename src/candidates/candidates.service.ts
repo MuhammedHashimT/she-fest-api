@@ -386,6 +386,9 @@ export class CandidatesService {
           }
         }),
       );
+
+
+   
       const candidate = await queryBuilder.getMany();
       return candidate;
     } catch (e) {

@@ -264,6 +264,8 @@ export class ProgrammesService {
       'candidateProgramme.candidate.team.zone',
       'candidateProgramme.zonalgrade',
       'candidateProgramme.zonalposition',
+      'candidateProgramme.finalgrade',
+      'candidateProgramme.finalposition',
     ];
 
     // validating fields
@@ -282,6 +284,8 @@ export class ProgrammesService {
         .leftJoinAndSelect('category.settings', 'settings')
         .leftJoinAndSelect('candidateProgramme.zonalgrade', 'zonalgrade')
         .leftJoinAndSelect('candidateProgramme.zonalposition', 'zonalposition')
+        .leftJoinAndSelect('candidateProgramme.finalgrade', 'finalgrade')
+        .leftJoinAndSelect('candidateProgramme.finalposition', 'finalposition')
         .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup')
         .orderBy('programme.id', 'ASC');
 
