@@ -1202,18 +1202,7 @@ export class ProgrammesService {
               });
             }
 
-            if (cp.candidate?.team?.zone?.name === team.zone.name) {
-              zonesWithPoint.forEach(zone => {
-                if (zone.name === team.zone.name) {
-                  zone.totalPoint += cp?.finalpoint;
-                  zone.categoryWisePoint.forEach(categoryWisePoint => {
-                    if (categoryWisePoint.categoryName === programme?.category?.name) {
-                      categoryWisePoint.categoryPoint += cp?.finalpoint;
-                    }
-                  });
-                }
-              })
-            }
+          
           }
           );
 
@@ -1225,6 +1214,35 @@ export class ProgrammesService {
         teamsWithPoint.push(teamWithPoint);
 
       });
+
+      // if (cp.candidate?.team?.zone?.name === team.zone.name) {
+      //   zonesWithPoint.forEach(zone => {
+      //     if (zone.name === team.zone.name) {
+      //       zone.totalPoint += cp?.finalpoint;
+      //       zone.categoryWisePoint.forEach(categoryWisePoint => {
+      //         if (categoryWisePoint.categoryName === programme?.category?.name) {
+      //           categoryWisePoint.categoryPoint += cp?.finalpoint;
+      //         }
+      //       });
+      //     }
+      //   })
+      // }
+
+      zonesWithPoint.forEach(zone => {
+        teamsWithPoint.forEach(team => {
+          if (team.zoneName === zone.name) {
+            zone.totalPoint += team.totalPoint;
+            zone.categoryWisePoint.forEach(categoryWisePoint => {
+              team.categoryWisePoint.forEach(teamCategoryWisePoint => {
+                if (categoryWisePoint.categoryName === teamCategoryWisePoint.categoryName) {
+                  categoryWisePoint.categoryPoint += teamCategoryWisePoint.categoryPoint;
+                }
+              });
+            });
+          }
+        });
+      }
+      );
 
       teamsWithPoint.sort((a, b) => {
         return b.totalPercentage - a.totalPercentage;
