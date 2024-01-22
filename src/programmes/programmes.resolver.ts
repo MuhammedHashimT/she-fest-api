@@ -107,14 +107,14 @@ export class ProgrammesResolver {
     return this.programmesService.findResultEnteredProgrammesByZone(zone , fields);
   }
 
-  @Query(() => ResultsRead , { name: 'findResultPublishedProgrammesByZone' })
-  findResultPublishedProgrammesByZone(
-    @Args('zone', { type: () => String }) zone: string,
-    @Info() info: any
-  ) {
-    const fields = Object.keys(fieldsProjection(info));
-    return this.programmesService.findResultPublishedProgrammesByZone(zone , fields);
-  }
+  // @Query(() => ResultsRead , { name: 'findResultPublishedProgrammesByZone' })
+  // findResultPublishedProgrammesByZone(
+  //   @Args('zone', { type: () => String }) zone: string,
+  //   @Info() info: any
+  // ) {
+  //   const fields = Object.keys(fieldsProjection(info));
+  //   return this.programmesService.findResultPublishedProgrammesByZone(zone , fields );
+  // }
 
   @Query(() => ResultsReadFinal , { name: 'findResultEnteredProgrammesByFinal' })
   findResultEnteredProgrammesByFinal(
