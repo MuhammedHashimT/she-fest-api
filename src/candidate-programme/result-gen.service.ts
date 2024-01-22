@@ -119,8 +119,6 @@ export class ResultGenService {
       await this.candidateProgrammeService.getCandidatesOfProgramme(programCode);
 
     // checking the two input ore equal
-
-    console.log(candidatesOfProgramme.length , input.length);
     
 
     const isSameLength = candidatesOfProgramme.length === input.length;
@@ -147,7 +145,7 @@ export class ResultGenService {
       return chestNoA - chestNoB;
     });
 
-    console.log(candidatesOfProgramme.length , input.length);
+    // console.log(candidatesOfProgramme.length , input.length);
 
     if (!isSameLength) {
       throw new HttpException(
@@ -194,7 +192,7 @@ export class ResultGenService {
       },
     );
 
-    console.log(finalCandidates);
+    // console.log(finalCandidates);
     
 
     // checking the two input ore equal
@@ -221,7 +219,7 @@ export class ResultGenService {
       return chestNoA.localeCompare(chestNoB);
     });
 
-      console.log(finalCandidates.length , input.length);
+      // console.log(finalCandidates.length , input.length);
       
 
     if (!isSameLength) {
@@ -325,7 +323,7 @@ export class ResultGenService {
   }
 
   async generatePoint(CandidateProgramme: CandidateProgramme) {
-    console.log(CandidateProgramme);
+    // console.log(CandidateProgramme);
 
     // giving the point of grade
     const grade: Grade = CandidateProgramme.finalgrade;
@@ -646,10 +644,10 @@ export class ResultGenService {
 
           if (grade) {
 
-            console.log(grade);
-
+            
             candidateProgramme.finalgrade = grade;
-
+            
+            console.log(candidateProgramme.finalgrade);
 
             // calculating the mark
             if (programme.type == Type.SINGLE) {
@@ -676,10 +674,11 @@ export class ResultGenService {
 
         if (position) {
 
-          console.log(position);
           
-
+          
           candidateProgramme.finalposition = position;
+          
+          console.log(candidateProgramme.finalposition);
 
           // calculating the mark
 

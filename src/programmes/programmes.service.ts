@@ -1090,6 +1090,8 @@ export class ProgrammesService {
       'programmes.candidateProgramme.candidate.team.zone',
       'programmes.candidateProgramme.zonalgrade',
       'programmes.candidateProgramme.zonalposition',
+      'programmes.candidateProgramme.finalgrade',
+      'programmes.candidateProgramme.finalposition',
     ];
 
     // validating fields
@@ -1347,6 +1349,8 @@ export class ProgrammesService {
       'programmes.candidateProgramme.candidate.team.zone',
       'programmes.candidateProgramme.zonalgrade',
       'programmes.candidateProgramme.zonalposition',
+      'programmes.candidateProgramme.finalgrade',
+      'programmes.candidateProgramme.finalposition',
     ];
 
     // validating fields
@@ -1380,6 +1384,8 @@ export class ProgrammesService {
         .leftJoinAndSelect('category.settings', 'settings')
         .leftJoinAndSelect('candidateProgramme.zonalgrade', 'zonalgrade')
         .leftJoinAndSelect('candidateProgramme.zonalposition', 'zonalposition')
+        .leftJoinAndSelect('candidateProgramme.finalgrade', 'finalgrade')
+        .leftJoinAndSelect('candidateProgramme.finalposition', 'finalposition')
         .leftJoinAndSelect('candidateProgramme.candidatesOfGroup', 'candidatesOfGroup');
 
       queryBuilder.select(
